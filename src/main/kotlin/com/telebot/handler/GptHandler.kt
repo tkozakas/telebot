@@ -4,6 +4,7 @@ import com.telebot.enums.Command
 import com.telebot.enums.SubCommand
 import com.telebot.service.GptService
 import io.github.dehuckakpyt.telegrambot.annotation.HandlerComponent
+import io.github.dehuckakpyt.telegrambot.exception.chat.ChatException
 import io.github.dehuckakpyt.telegrambot.factory.input.input
 import io.github.dehuckakpyt.telegrambot.handler.BotHandler
 
@@ -18,8 +19,7 @@ class GptHandler(
 
         val args = message.text?.split(" ") ?: emptyList()
         val userPrompt = args.drop(1).joinToString(" ").takeIf { it.isNotBlank() } ?: run {
-            sendMessage(INVALID_PROMPT)
-            return@command
+            throw ChatException(INVALID_PROMPT)
         }
 
         args.getOrNull(1)?.uppercase()?.let { subCommand ->
@@ -41,7 +41,7 @@ class GptHandler(
 
         gptService.processPrompt(chatId, username, userPrompt)
             ?.let { botResponse -> sendMessage(botResponse) }
-            ?: sendMessage(NO_RESPONSE)
+            ?: throw ChatException(NO_RESPONSE)
     }
 }) {
     companion object Messages {

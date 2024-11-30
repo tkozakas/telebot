@@ -11,29 +11,29 @@ import kotlin.io.path.writeText
 @Service
 class GptService(
     private val gptClient: GptClient,
-    private val gptMessageService: GptMessageService,
+    private val gptMessageStorageService: GptMessageStorageService,
     private val gptProperties: GptProperties
 ) {
     fun processPrompt(chatId: Long, username: String, prompt: String): String? {
         val userMessage = GptRequestDTO.Message(role = "user", content = "$username: $prompt")
-        gptMessageService.addMessage(chatId, userMessage)
-        val messages = gptMessageService.getMessages(chatId)
+        gptMessageStorageService.addMessage(chatId, userMessage)
+        val messages = gptMessageStorageService.getMessages(chatId)
         val gptRequest = GptRequestDTO(messages = messages, gptProperties = gptProperties)
         val gptResponse = gptClient.getChatCompletion(gptRequest)
         val botMessage = extractBotMessage(gptResponse)
         if (botMessage != null) {
-            gptMessageService.addMessage(chatId, botMessage)
+            gptMessageStorageService.addMessage(chatId, botMessage)
             return botMessage.content
         }
         return null
     }
 
     fun clearChatHistory(chatId: Long) {
-        gptMessageService.clearMessages(chatId)
+        gptMessageStorageService.clearMessages(chatId)
     }
 
     fun getChatHistory(chatId: Long): Path {
-        val messages = gptMessageService.getMessages(chatId)
+        val messages = gptMessageStorageService.getMessages(chatId)
         return kotlin.io.path.createTempFile(prefix = "chat_history_", suffix = ".txt").apply {
             writeText(messages.joinToString("\n") { "${it.role}: ${it.content}" })
         }

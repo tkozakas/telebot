@@ -1,21 +1,19 @@
 package com.telebot.model
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.Id
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import java.util.*
 
 @Entity
 @Table(name = "subreddits")
-open class Subreddit {
+open class Subreddit(
     @Id
+    @GeneratedValue
     @Column(name = "subreddit_id", nullable = false)
-    open var id: UUID? = null
+    open var id: UUID? = null,
 
-    @Column(name = "chat_id")
-    open var chatId: Long? = null
+    @Column(name = "chat_id", nullable = false)
+    open var chatId: Long,
 
-    @Column(name = "subreddit_name")
-    open var subredditName: String? = null
-}
+    @Column(name = "subreddit_name", nullable = false)
+    open var subredditName: String
+)

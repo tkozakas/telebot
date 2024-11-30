@@ -1,15 +1,13 @@
 package com.telebot.model
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.Id
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import java.util.*
 
 @Entity
 @Table(name = "stickers")
 open class Sticker {
     @Id
+    @GeneratedValue
     @Column(name = "sticker_id", nullable = false)
     open var id: UUID? = null
 

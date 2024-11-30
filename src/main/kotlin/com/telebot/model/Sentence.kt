@@ -1,14 +1,12 @@
 package com.telebot.model
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.Id
-import jakarta.persistence.Table
+import jakarta.persistence.*
 
 @Entity
 @Table(name = "sentence")
 open class Sentence {
     @Id
+    @GeneratedValue
     @Column(name = "sentence_id", nullable = false)
     open var id: Long? = null
 

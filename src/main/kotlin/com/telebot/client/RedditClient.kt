@@ -13,9 +13,6 @@ import org.springframework.web.bind.annotation.PathVariable
 )
 interface RedditClient {
 
-    @get:GetMapping("/gimme")
-    val redditMeme: String?
-
     @GetMapping("/gimme/{subreddit}/{count}")
     fun getRedditMemes(
         @PathVariable subreddit: String?,

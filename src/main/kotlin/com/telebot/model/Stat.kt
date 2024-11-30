@@ -4,14 +4,13 @@ import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import java.util.*
 
 @Entity
 @Table(name = "stats")
 open class Stat {
     @Id
     @Column(name = "stats_id", nullable = false)
-    open var id: UUID? = null
+    open var id: Long? = null
 
     @Column(name = "chat_id")
     open var chatId: Long? = null

@@ -8,8 +8,12 @@ import io.github.dehuckakpyt.telegrambot.handler.BotHandler
 class HelpHandler : BotHandler({
     val help = """
             |Available commands:
-            |${Command.values().joinToString("\n") { it.command }}
-        """.trimMargin()
+            |${
+        Command.values()
+            .filter { !it.listExcluded }
+            .joinToString("\n") { it.command }
+    }
+    """.trimMargin()
 
     command(Command.Help.command) {
         sendMessage(help)

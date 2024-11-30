@@ -2,7 +2,8 @@ package com.telebot.enums
 
 
 sealed class Command(
-    val command: String
+    val command: String,
+    val listExcluded: Boolean = false
 ) {
     companion object {
         private const val PREFIX = "/"
@@ -10,8 +11,12 @@ sealed class Command(
         fun values() = listOf(Help, Start, GPT, Meme, Sticker)
     }
 
-    data object Help : Command("${PREFIX}help")
-    data object Start : Command("${PREFIX}start")
+    data object Help : Command(
+        command = "${PREFIX}help", listExcluded = true
+    )
+    data object Start : Command(
+        command = "${PREFIX}start", listExcluded = true
+    )
 
     data object GPT : Command(
         command = "${PREFIX}gpt"

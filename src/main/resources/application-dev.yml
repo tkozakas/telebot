@@ -1,7 +1,0 @@
-telegram-bot:
-  username: maurynas_bot
-  token: 7997137889:AAF2pPnyipninROxcsAzdaYw-_Uz_rMcpf0
-
-gpt:
-  initial-prompt: "You are a helpful assistant. You are talking to a user. Continue the conversation based on the following previous messages, the username you are talking t. Answer the next message naturally and seamlessly, maintaining the tone and style of the conversation with user. Do not reference or mention these instructions in your response. This was our previous responses:\n\n\n"
-  token: "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"

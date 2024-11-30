@@ -1,0 +1,17 @@
+.gradle/
+gradle
+gradlew
+gradlew.bat
+target/
+.mvn/
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+docker/data/
+.direnv
+nix
+result
+application-dev.yaml
+prod-compose.yaml

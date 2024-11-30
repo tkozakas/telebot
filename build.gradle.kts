@@ -1,19 +1,14 @@
 plugins {
     kotlin("jvm") version "1.9.25"
     kotlin("plugin.spring") version "1.9.25"
-    id("org.springframework.boot") version "3.4.0"
+    id("org.springframework.boot") version "3.3.0"
     id("io.spring.dependency-management") version "1.1.6"
 }
 
 group = "com.telebot"
 version = "1.0-SNAPSHOT"
 
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(23)
-    }
-}
+var telegramBotVersion = "0.11.3"
 
 configurations {
     compileOnly {
@@ -23,18 +18,14 @@ configurations {
 
 repositories {
     mavenCentral()
-    maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
-    compileOnly("org.projectlombok:lombok")
-    annotationProcessor("org.projectlombok:lombok")
+    implementation("io.github.dehuckakpyt.telegrambot:telegram-bot-core:$telegramBotVersion")
+    implementation("io.github.dehuckakpyt.telegrambot:telegram-bot-spring:$telegramBotVersion")
 
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.1.4")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.1.6")
 }
 
 kotlin {

@@ -1,0 +1,21 @@
+services:
+  telegram-bot:
+    container_name: telebot
+    # build image locally first
+    image: tkozakas/telebot:latest
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://telebot-postgres-prod:5432/telebot"
+      SPRING_DATASOURCE_USERNAME: "postgres"
+      SPRING_DATASOURCE_PASSWORD: "postgres"
+      BOT_USERNAME: "<<bot_username>>"
+      BOT_TOKEN: "<<bot_token>>"
+    volumes:
+      - ./data:/app/data
+
+  telegram-bot-postgres-prod:
+    container_name: telebot-postgres-prod
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: telebot

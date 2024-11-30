@@ -1,3 +1,12 @@
+spring:
+  datasource:
+    url: # <<YOUR_URL>>
+    username: # <<YOUR_USERNAME>>
+    password: # <<YOUR_PASSWORD>>
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
 gpt:
   initial-prompt: "You are a helpful assistant. You are talking to a user. Continue the conversation based on the following previous messages, the username you are talking t. Answer the next message naturally and seamlessly, maintaining the tone and style of the conversation with user. Do not reference or mention these instructions in your response. This was our previous responses:\n\n\n"
   model: "llama3-groq-70b-8192-tool-use-preview"

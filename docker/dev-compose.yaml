@@ -1,0 +1,15 @@
+services:
+  telebot-postgres-dev:
+    container_name: telebot-postgres-dev
+    image: postgres:16
+    ports:
+      - "6969:5432"
+    environment:
+      POSTGRES_DB: telebot
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - telebot-data:/var/lib/postgresql/data
+
+volumes:
+  telebot-data:

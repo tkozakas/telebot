@@ -13,5 +13,5 @@ docker/data/
 .direnv
 nix
 result
-application-dev.yaml
-prod-compose.yaml
+application-dev.yml
+prod-compose.yml

@@ -23,6 +23,7 @@ class DailyMessageService(
 
     suspend fun handleDailyMessage(
         chatId: Long,
+        args: List<String>,
         alias: String,
         sendMessage: suspend (String) -> Unit
     ) {

@@ -52,9 +52,13 @@ class CommandHandler(
     command(Command.DailyMessage.command + alias) {
         val chatId = message.chat.id
         val args = message.text?.split(" ") ?: emptyList()
-        dailyMessageService.handleDailyMessage(chatId, alias) { message ->
-            sendMessage(message)
-        }
+
+        dailyMessageService.handleDailyMessage(
+            chatId = chatId,
+            args = args,
+            alias = alias,
+            sendMessage = { text -> sendMessage(text = text) },
+        )
     }
 
     command(Command.Fact.command) {

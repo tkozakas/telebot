@@ -19,4 +19,4 @@ gpt:
   tool-choice: "auto"
 
 media:
-  output-dir: "${TMP_DIR:-~/tmp}"
+  output-dir: "${TMP_DIR:tmp}"

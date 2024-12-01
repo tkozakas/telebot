@@ -51,4 +51,8 @@ class SubredditService(
         }
     }
 
+    fun deleteTempFiles() {
+        mediaUtil.deleteTempFiles()
+    }
+
 }

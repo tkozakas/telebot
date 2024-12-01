@@ -78,6 +78,7 @@ class MemeHandler(
 
                 if (mediaGroup.isNotEmpty()) {
                     sendMediaGroup(mediaGroup)
+                    subredditService.deleteTempFiles()
                 } else {
                     sendMessage(NO_MEMES_FOUND)
                 }

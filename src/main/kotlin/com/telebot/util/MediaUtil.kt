@@ -13,7 +13,7 @@ import java.util.*
 @Component
 class MediaUtil {
 
-    @Value("\${output.dir:/tmp}")
+    @Value("\${media.output-dir}")
     private lateinit var outputDir: String
 
     private val tempFiles = mutableListOf<File>()
@@ -79,5 +79,10 @@ class MediaUtil {
             println("Error converting GIF to MP4: ${e.message}")
             return null
         }
+    }
+
+    fun deleteTempFiles() {
+        tempFiles.forEach { it.delete() }
+        tempFiles.clear()
     }
 }

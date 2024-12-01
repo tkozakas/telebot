@@ -5,82 +5,77 @@ import com.telebot.enums.SubCommand
 import com.telebot.service.SubredditService
 import io.github.dehuckakpyt.telegrambot.annotation.HandlerComponent
 import io.github.dehuckakpyt.telegrambot.handler.BotHandler
-
 @HandlerComponent
 class MemeHandler(
     private val redditClient: RedditClient,
     private val subredditService: SubredditService
 ) : BotHandler({
-    val redditUrl = "https://www.reddit.com/r/";
-
-    command("/meme", next = "meme") {
+    command("/meme") {
+        val chatId = message.chat.id
         val args = message.text?.split(" ") ?: emptyList()
+        val subCommand = args.getOrNull(1)?.lowercase()
+        val subredditName = args.getOrNull(2)?.removePrefix(REDDIT_URL)
 
-        when (args.getOrNull(1)?.lowercase()) {
+        when (subCommand) {
             SubCommand.LIST.name.lowercase() -> {
-                next("list_subreddits")
-                return@command
+                subredditService.findByChatId(chatId).takeIf { it.isNotEmpty() }
+                    ?.joinToString("\n") { it.subredditName }
+                    ?.let { sendMessage(it) }
+                    ?: sendMessage(NO_SUBREDDITS_FOUND)
             }
 
-            SubCommand.ADD.name.lowercase() -> {
-                next("add_subreddit")
-                return@command
+            SubCommand.ADD.name.lowercase() -> subredditName
+                ?.takeIf { it.isNotBlank() }
+                ?.let {
+                    subredditService.addSubreddit(chatId, it)
+                    sendMessage(SUBREDDIT_ADDED.format(it))
+                }
+                ?: sendMessage(PROVIDE_SUBREDDIT_NAME)
+
+            else -> {
+                val subreddit =
+                    subredditService.findByChatId(chatId).takeIf { it.isNotEmpty() }?.randomOrNull()?.subredditName
+                if (subreddit == null) {
+                    sendMessage(NO_SUBREDDITS_FOUND)
+                } else {
+                    val memeUrl = redditClient.getRedditMemes(subreddit, 1)?.data?.getOrNull(0)?.url
+                    memeUrl?.let {
+                        when {
+                            it.endsWith(
+                                ".gif",
+                                true
+                            ) -> sendAnimation(it)
+
+                            it.endsWith(
+                                ".mp4",
+                                true
+                            ) -> sendVideo(it)
+
+                            it.endsWith(
+                                ".jpg",
+                                true
+                            ) || it.endsWith(
+                                ".jpeg",
+                                true
+                            ) || it.endsWith(
+                                ".png",
+                                true
+                            ) -> sendPhoto(it)
+
+                            else -> sendMessage(UNSUPPORTED_MEDIA_TYPE.format(it))
+                        }
+                    } ?: sendMessage(NO_MEMES_FOUND)
+                }
             }
         }
     }
-
-    step("list_subreddits") {
-        val chatId = message.chat.id
-        val subreddits = subredditService.findByChatId(chatId)
-
-        if (subreddits.isEmpty()) {
-            sendMessage("No subreddits found")
-            return@step
-        }
-
-        val message = subreddits.joinToString("\n") { it.subredditName }
-        sendMessage(message)
+}) {
+    companion object Constants {
+        const val REDDIT_URL = "https://www.reddit.com/r/"
+        const val NO_SUBREDDITS_FOUND = "No subreddits found"
+        const val PROVIDE_SUBREDDIT_NAME = "Please provide a subreddit name"
+        const val SUBREDDIT_ADDED = "Subreddit %s added"
+        const val NO_MEMES_FOUND = "No memes found"
+        const val UNSUPPORTED_MEDIA_TYPE = "Unsupported media type: %s"
     }
-
-    step("add_subreddit") {
-        val chatId = message.chat.id
-        val args = message.text?.split(" ") ?: emptyList()
-
-        if (args.size < 3) {
-            sendMessage("Please provide a subreddit name")
-            return@step
-        }
-
-        val subreddit = args[2].contains(redditUrl).let {
-            if (it) args[2].removePrefix(redditUrl) else args[2]
-        }
-
-        subredditService.addSubreddit(chatId, subreddit)
-        sendMessage("Subreddit $subreddit added")
-    }
-
-    step("meme") {
-        val chatId = message.chat.id
-        val subreddits = subredditService.findByChatId(chatId)
-
-        if (subreddits.isEmpty()) {
-            sendMessage("No subreddits found")
-            return@step
-        }
-
-        val subreddit = subreddits.random().subredditName
-        val response = redditClient.getRedditMemes(subreddit, 1)
-        val memeUrl = response?.data?.get(0)?.url ?: return@step
-
-        when {
-            memeUrl.endsWith(".gif", true) -> sendAnimation(memeUrl)
-            memeUrl.endsWith(".mp4", true) -> sendVideo(memeUrl)
-            memeUrl.endsWith(".jpg", true)
-                    || memeUrl.endsWith(".jpeg", true)
-                    || memeUrl.endsWith(".png", true) ->
-                sendPhoto(memeUrl)
-
-            else -> sendMessage("Unsupported media type: $memeUrl")
-        }
-    }
-})
+}

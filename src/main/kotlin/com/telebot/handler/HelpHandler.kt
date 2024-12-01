@@ -6,21 +6,18 @@ import io.github.dehuckakpyt.telegrambot.handler.BotHandler
 
 @HandlerComponent
 class HelpHandler : BotHandler({
-    val help = """
-            |Available commands:
-            |${
-        Command.values()
-            .filter { !it.listExcluded }
-            .joinToString("\n") { it.command }
-    }
-    """.trimMargin()
-
     command(Command.Help.command) {
-        sendMessage(help)
+        sendMessage(helpMessage())
     }
 
     command(Command.Start.command) {
-        sendMessage(help)
+        sendMessage(helpMessage())
     }
-
 })
+
+private fun helpMessage(): String {
+    return """
+        |Available commands:
+        |${Command.values().joinToString("\n") { it.command }}
+    """.trimMargin()
+}

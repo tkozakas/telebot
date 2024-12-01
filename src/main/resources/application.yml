@@ -20,3 +20,6 @@ gpt:
 
 media:
   output-dir: "${TMP_DIR:tmp}"
+
+daily-message:
+  alias: "daily"

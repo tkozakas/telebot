@@ -1,6 +1,5 @@
 package com.telebot.enums
 
-
 sealed class Command(
     val command: String,
     val listExcluded: Boolean = false
@@ -20,4 +19,5 @@ sealed class Command(
     data object Meme : Command("${PREFIX}meme")
     data object Sticker : Command("${PREFIX}sticker")
     data object Menu : Command("${PREFIX}menu")
+    data object DailyMessage : Command(PREFIX)
 }

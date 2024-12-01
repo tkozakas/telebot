@@ -2,7 +2,6 @@ package com.telebot.handler
 
 import com.telebot.enums.SubCommand
 import com.telebot.service.SubredditService
-import com.telebot.util.MediaUtil
 import io.github.dehuckakpyt.telegrambot.annotation.HandlerComponent
 import io.github.dehuckakpyt.telegrambot.factory.input.input
 import io.github.dehuckakpyt.telegrambot.handler.BotHandler
@@ -12,8 +11,7 @@ import java.io.File
 
 @HandlerComponent
 class MemeHandler(
-    private val subredditService: SubredditService,
-    private val mediaUtil: MediaUtil
+    private val subredditService: SubredditService
 ) : BotHandler({
     command("/meme") {
         val chatId = message.chat.id

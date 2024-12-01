@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam
     url = "https://api.thedailyshitpost.net",
     configuration = [FeignConfig::class]
 )
-interface ShitpostingClient {
+interface ShitPostingClient {
 
     @GetMapping("/random")
     fun getRandomShitpost(): ShitPostResponseDTO

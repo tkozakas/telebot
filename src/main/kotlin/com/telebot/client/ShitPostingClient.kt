@@ -1,8 +1,8 @@
 package com.telebot.client
 
+import com.telebot.config.FeignConfig
 import com.telebot.dto.QuoteDTO
 import com.telebot.dto.ShitPostDTO
-import com.telebot.config.FeignConfig
 import org.springframework.cloud.openfeign.FeignClient
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam

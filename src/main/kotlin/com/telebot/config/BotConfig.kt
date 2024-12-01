@@ -16,7 +16,7 @@ class BotConfig {
     fun telegramBotConfig(): TelegramBotConfig = TelegramBotConfig().apply {
 
         receiving {
-            invocationStrategy = { HandlerInvocationStrategy.chatSync}
+            invocationStrategy = { HandlerInvocationStrategy.chatSync }
             exceptionHandler = { ExceptionHandler(telegramBot, receiving.messageTemplate, templater) }
         }
     }

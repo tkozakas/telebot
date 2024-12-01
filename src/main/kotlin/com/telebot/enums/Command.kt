@@ -14,6 +14,7 @@ sealed class Command(
     data object Help : Command(
         command = "${PREFIX}help", listExcluded = true
     )
+
     data object Start : Command(
         command = "${PREFIX}start", listExcluded = true
     )

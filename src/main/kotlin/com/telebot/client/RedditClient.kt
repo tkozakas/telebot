@@ -1,7 +1,7 @@
 package com.telebot.client
 
 import com.telebot.config.FeignConfig
-import com.telebot.dto.RedditDTO
+import com.telebot.dto.RedditResponseDTO
 import org.springframework.cloud.openfeign.FeignClient
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -17,9 +17,5 @@ interface RedditClient {
     fun getRedditMemes(
         @PathVariable subreddit: String?,
         @PathVariable count: Int
-    ): RedditDTO? {
-        val response = getRedditMemes(subreddit, count)
-        println("Raw JSON response: $response")
-        return response
-    }
+    ): RedditResponseDTO
 }

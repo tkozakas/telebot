@@ -30,8 +30,11 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.postgresql:postgresql:42.7.4")
 
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.1.4")
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
+    implementation("com.arthenica:ffmpeg-kit-full-gpl:4.5.1-1")
+
 }
 
 kotlin {

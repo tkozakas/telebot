@@ -11,7 +11,7 @@ import io.github.dehuckakpyt.telegrambot.handler.BotHandler
 class GptHandler(
     private val gptService: GptService
 ) : BotHandler({
-    command(Command.GPT.command, next = "process_prompt") {
+    command(Command.GPT.command) {
         val chatId = message.chat.id
         val username = message.from?.username ?: "User"
         val args = message.text?.split(" ") ?: emptyList()

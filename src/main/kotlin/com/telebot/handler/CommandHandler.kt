@@ -18,6 +18,7 @@ class CommandHandler(
     private val dailyMessageService: DailyMessageService,
     @Value("\${daily-message.alias}") private val alias: String
 ) : BotHandler({
+
     command(Command.GPT.command) {
         val chatId = message.chat.id
         val username = message.from?.username ?: "User"
@@ -50,6 +51,7 @@ class CommandHandler(
 
     command(Command.DailyMessage.command + alias) {
         val chatId = message.chat.id
+        val args = message.text?.split(" ") ?: emptyList()
         dailyMessageService.handleDailyMessage(chatId, alias) { message ->
             sendMessage(message)
         }

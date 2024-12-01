@@ -17,5 +17,9 @@ interface RedditClient {
     fun getRedditMemes(
         @PathVariable subreddit: String?,
         @PathVariable count: Int
-    ): RedditDTO?
+    ): RedditDTO? {
+        val response = getRedditMemes(subreddit, count)
+        println("Raw JSON response: $response")
+        return response
+    }
 }

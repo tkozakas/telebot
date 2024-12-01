@@ -6,28 +6,18 @@ sealed class Command(
     val listExcluded: Boolean = false
 ) {
     companion object {
-        private const val PREFIX = "/"
+        const val PREFIX = "/"
 
-        fun values() = listOf(Help, Start, GPT, Meme, Sticker)
+        fun values() = listOf(Help, Start, GPT, Meme, Sticker, Menu)
+        fun fromCommand(selectedCommandData: String): Command {
+            return values().find { it.command == selectedCommandData } ?: Help
+        }
     }
 
-    data object Help : Command(
-        command = "${PREFIX}help", listExcluded = true
-    )
-
-    data object Start : Command(
-        command = "${PREFIX}start", listExcluded = true
-    )
-
-    data object GPT : Command(
-        command = "${PREFIX}gpt"
-    )
-
-    data object Meme : Command(
-        command = "${PREFIX}meme"
-    )
-
-    data object Sticker : Command(
-        command = "${PREFIX}sticker"
-    )
+    data object Help : Command("${PREFIX}help", true)
+    data object Start : Command("${PREFIX}start", true)
+    data object GPT : Command("${PREFIX}gpt")
+    data object Meme : Command("${PREFIX}meme")
+    data object Sticker : Command("${PREFIX}sticker")
+    data object Menu : Command("${PREFIX}menu")
 }

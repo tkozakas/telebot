@@ -22,7 +22,7 @@ class MemeHandler(
                 subredditService.findByChatId(chatId).takeIf { it.isNotEmpty() }
                     ?.joinToString("\n") { it.subredditName }
                     ?.let { sendMessage(it) }
-                    ?: sendMessage(NO_SUBREDDITS_FOUND)
+                    ?: sendMessage(EMPTY_SUBREDDIT_LIST)
             }
 
             SubCommand.ADD.name.lowercase() -> subredditName
@@ -30,6 +30,14 @@ class MemeHandler(
                 ?.let {
                     subredditService.addSubreddit(chatId, it)
                     sendMessage(SUBREDDIT_ADDED.format(it))
+                }
+                ?: sendMessage(PROVIDE_SUBREDDIT_NAME)
+
+            SubCommand.REMOVE.name.lowercase() -> subredditName
+                ?.takeIf { it.isNotBlank() }
+                ?.let {
+                    subredditService.removeSubreddit(chatId, it)
+                    sendMessage(SUBREDDIT_REMOVED.format(it))
                 }
                 ?: sendMessage(PROVIDE_SUBREDDIT_NAME)
 
@@ -74,8 +82,10 @@ class MemeHandler(
     companion object Constants {
         const val REDDIT_URL = "https://www.reddit.com/r/"
         const val NO_SUBREDDITS_FOUND = "No subreddits found"
+        const val EMPTY_SUBREDDIT_LIST = "Subreddit list is empty"
         const val PROVIDE_SUBREDDIT_NAME = "Please provide a subreddit name"
         const val SUBREDDIT_ADDED = "Subreddit %s added"
+        const val SUBREDDIT_REMOVED = "Subreddit %s removed"
         const val NO_MEMES_FOUND = "No memes found"
         const val UNSUPPORTED_MEDIA_TYPE = "Unsupported media type: %s"
     }

@@ -2,6 +2,7 @@ package com.telebot.service
 
 import com.telebot.model.Subreddit
 import com.telebot.repository.SubredditRepository
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 
 @Service
@@ -19,5 +20,10 @@ class SubredditService(
                 subredditName = subreddit
             )
         )
+    }
+
+    @Transactional
+    fun removeSubreddit(chatId: Long, it: String) {
+        subredditRepository.deleteByChatIdAndSubredditName(chatId, it)
     }
 }

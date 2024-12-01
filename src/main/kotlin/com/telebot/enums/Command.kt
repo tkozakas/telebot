@@ -19,5 +19,6 @@ sealed class Command(
     data object Meme : Command("${PREFIX}meme")
     data object Sticker : Command("${PREFIX}sticker")
     data object Menu : Command("${PREFIX}menu")
+    data object Fact : Command("${PREFIX}fact")
     data object DailyMessage : Command(PREFIX)
 }

@@ -5,6 +5,7 @@ import com.telebot.enums.SubCommand
 import com.telebot.service.SubredditService
 import io.github.dehuckakpyt.telegrambot.annotation.HandlerComponent
 import io.github.dehuckakpyt.telegrambot.handler.BotHandler
+
 @HandlerComponent
 class MemeHandler(
     private val redditClient: RedditClient,

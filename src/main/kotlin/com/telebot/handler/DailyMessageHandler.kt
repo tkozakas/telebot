@@ -18,9 +18,7 @@ class DailyMessageHandler(
 
     command(Command.DailyMessage.command + alias) {
         val chatId = message.chat.id
-
         val sentences = dailyMessageService.getRandomGroupSentences()
-
         val stats = dailyMessageService.getStatByChatIdAndYear(chatId, CURRENT_YEAR)
         val randomWinner = stats.randomOrNull()
 

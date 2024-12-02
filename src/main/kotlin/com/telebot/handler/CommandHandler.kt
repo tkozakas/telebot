@@ -1,10 +1,7 @@
 package com.telebot.handler
 
 import com.telebot.enums.Command
-import com.telebot.service.DailyMessageService
-import com.telebot.service.FactService
-import com.telebot.service.GptService
-import com.telebot.service.MemeService
+import com.telebot.service.*
 import io.github.dehuckakpyt.telegrambot.annotation.HandlerComponent
 import io.github.dehuckakpyt.telegrambot.factory.input.input
 import io.github.dehuckakpyt.telegrambot.handler.BotHandler
@@ -16,6 +13,7 @@ class CommandHandler(
     private val memeService: MemeService,
     private val gptService: GptService,
     private val dailyMessageService: DailyMessageService,
+    private val ttsService: TtsService,
     @Value("\${daily-message.alias}") private val alias: String
 ) : BotHandler({
 
@@ -48,7 +46,7 @@ class CommandHandler(
             userId = userId,
             username = username,
             subCommand = subCommand,
-            year = year, sendMessage = { text -> sendMessage(text =text, parseMode = "Markdown") }
+            year = year, sendMessage = { text -> sendMessage(text = text, parseMode = "Markdown") }
         )
     }
 
@@ -73,6 +71,17 @@ class CommandHandler(
             subCommand = subCommand,
             comment = comment,
             sendMessage = { text -> sendMessage(text = text) }
+        )
+    }
+
+    command(Command.Tts.command) {
+        val messageText = message.text?.substringAfter(" ") ?: ""
+
+        ttsService.handleTtsCommand(
+            messageText = messageText,
+            sendAudio = { audio -> sendAudio(audio = audio) },
+            sendMessage = { text -> sendMessage(text = text) },
+            input = { file -> input(file) }
         )
     }
 

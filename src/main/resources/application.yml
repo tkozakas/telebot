@@ -12,7 +12,12 @@ spring:
 media:
   output-dir: "${TMP_DIR:tmp}"
 
+telegram:
+  username: # <<your_username>>
+  token: # <<your_token>>
+
 gpt:
+  token: # <<your_token>>
   initial-prompt: "You are a helpful assistant. You are talking to a user. 
   Continue the conversation based on the following previous messages, the username you are talking to. 
   Answer the next message naturally and seamlessly, maintaining the tone and style of the conversation with user. 
@@ -26,6 +31,15 @@ gpt:
   temperature: 0.7
   top-p: 0.9
   tool-choice: "auto"
+
+tts:
+  token: # <<your_token>>
+  voice-id: # <<your_voice_id>>
+  model-id: "eleven_multilingual_v2"
+  stability: 0.5
+  similarity-boost: 0.5
+  style: 0.0
+  use-speaker-boost: true
 
 schedule:
   daily-message: 0 0 12 * * *

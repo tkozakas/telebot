@@ -9,7 +9,8 @@ import org.springframework.scheduling.annotation.EnableScheduling
 @EnableConfigurationProperties(
     value = [
         com.telebot.properties.GptProperties::class,
-        com.telebot.properties.DailyMessageTemplate::class
+        com.telebot.properties.DailyMessageTemplate::class,
+        com.telebot.properties.TtsProperties::class
     ]
 )
 class AppConfig

@@ -60,6 +60,12 @@ sealed class Command(
         subCommands = listOf(SubCommand.ADD)
     )
 
+    data object Tts : Command(
+        "${PREFIX}tts",
+        "Text-to-speech",
+        subCommands = emptyList()
+    )
+
     data object DailyMessage : Command(
         "$PREFIX%s",
         "Daily message",

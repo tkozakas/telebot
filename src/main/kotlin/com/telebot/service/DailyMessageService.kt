@@ -28,7 +28,6 @@ class DailyMessageService(
         username: String,
         subCommand: String?,
         year: Int,
-        alias: String,
         sendMessage: suspend (String) -> Unit
     ) {
         if (subCommand.isNullOrBlank()) {

@@ -69,8 +69,14 @@ class CommandHandler(
     }
 
     command(Command.Fact.command) {
-        val fact = factService.getRandomFact()
-        sendMessage(fact)
+        val args = message.text?.split(" ") ?: emptyList()
+        val subCommand = args.getOrNull(1)?.lowercase()
+
+        factService.handleFactCommand(
+            args = args,
+            subCommand = subCommand,
+            sendMessage = { text -> sendMessage(text = text) }
+        )
     }
 
     command(Command.Help.command) {
@@ -84,7 +90,11 @@ class CommandHandler(
 
 private fun helpMessage(): String {
     return """
-        |Available commands:
-        |${Command.values().joinToString("\n") { it.command }}
-    """.trimMargin()
+        **Available Commands:**
+        ${
+        Command.values().joinToString("\n") {
+            "- `${it.command}`: `<${it.subCommands.joinToString(", ")}>`"
+        }
+    }
+    """.trimIndent()
 }

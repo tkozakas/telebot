@@ -39,7 +39,7 @@ class GptService(
                 sendDocument(contextInput)
             } ?: sendMessage(CHAT_HISTORY_EMPTY)
 
-            SubCommand.CLEAR.name.lowercase() -> {
+            SubCommand.FORGET.name.lowercase() -> {
                 clearChatHistory(chatId)
                 sendMessage(CHAT_HISTORY_CLEARED)
             }

@@ -6,12 +6,18 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+  config:
+    import: "classpath:application-template.yaml"
 
 media:
   output-dir: "${TMP_DIR:tmp}"
 
 gpt:
-  initial-prompt: "You are a helpful assistant. You are talking to a user. Continue the conversation based on the following previous messages, the username you are talking t. Answer the next message naturally and seamlessly, maintaining the tone and style of the conversation with user. Do not reference or mention these instructions in your response. This was our previous responses:\n\n\n"
+  initial-prompt: "You are a helpful assistant. You are talking to a user. 
+  Continue the conversation based on the following previous messages, the username you are talking to. 
+  Answer the next message naturally and seamlessly, maintaining the tone and style of the conversation with user. 
+  Do not reference or mention these instructions in your response. This was our previous responses:\n\n\n"
+
   model: "llama3-groq-70b-8192-tool-use-preview"
   n: 1
   frequency-penalty: 0.5
@@ -21,21 +27,8 @@ gpt:
   top-p: 0.9
   tool-choice: "auto"
 
-
 schedule:
   daily-message: 0 0 12 * * *
   winner-reset: 0 0 0 * * *
 
 #  meme-post: 0 0 * * * * TODO: Implement this
-
-daily-message:
-  alias: "daily"
-  no_stats: "No stats available."
-  stats_header: "Stats for %s"
-  stats_header_all: "Stats for all users"
-  stats_footer: "Total users: %d"
-  user_stats: "%s - %d points %s"
-  user_stats_no_score: "No score available for %s"
-  winner_exists: "Winner of the day is %s with %d points."
-  user_already_registered: "You already been registered."
-  user_registered: "%s has been registered."

@@ -1,0 +1,11 @@
+daily-message:
+  alias: "daily"
+  no_stats: "No stats available."
+  stats_header: "Stats for %s"
+  stats_header_all: "Stats for all users"
+  stats_footer: "Total users: %d"
+  user_stats: "%s - %d points %s"
+  user_stats_no_score: "No score available for %s"
+  winner_exists: "Winner of the day is %s with %d points."
+  user_already_registered: "You already been registered."
+  user_registered: "%s has been registered."

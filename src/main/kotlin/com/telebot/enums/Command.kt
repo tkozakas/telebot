@@ -33,6 +33,6 @@ sealed class Command(
         Command("${PREFIX}fact", subCommands = listOf(SubCommand.ADD))
 
     data object DailyMessage :
-        Command("${PREFIX}daily", subCommands = listOf(SubCommand.REGISTER, SubCommand.ALL, SubCommand.STATS))
+        Command(PREFIX, subCommands = listOf(SubCommand.REGISTER, SubCommand.ALL, SubCommand.STATS))
 }
 

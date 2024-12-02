@@ -49,7 +49,7 @@ class CommandHandler(
         )
     }
 
-    command(Command.DailyMessage.command) {
+    command(Command.DailyMessage.command + alias) {
         val chatId = message.chat.id
         val userId = message.from?.id ?: 0
         val username = message.from?.username ?: "User"

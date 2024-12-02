@@ -6,6 +6,9 @@ enum class SubCommand {
     CLEAR,
     ADD,
     REMOVE,
-    LIST
+    LIST,
+    ALL,
+    STATS,
+    REGISTER
 }
 

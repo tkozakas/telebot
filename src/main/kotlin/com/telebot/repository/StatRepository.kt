@@ -16,4 +16,5 @@ interface StatRepository : JpaRepository<Stat, Long> {
                 "WHERE s.chatId = ?1 AND s.userId = ?2 AND s.year = ?3"
     )
     fun setWinnerByChatIdAndUserIdAndYear(chatId: Long, userId: Long, year: Int)
+    fun findByChatId(chatId: Long): List<Stat>
 }

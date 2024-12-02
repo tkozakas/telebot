@@ -5,7 +5,10 @@ spring:
     password: # <<YOUR_PASSWORD>>
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
+
+media:
+  output-dir: "${TMP_DIR:tmp}"
 
 gpt:
   initial-prompt: "You are a helpful assistant. You are talking to a user. Continue the conversation based on the following previous messages, the username you are talking t. Answer the next message naturally and seamlessly, maintaining the tone and style of the conversation with user. Do not reference or mention these instructions in your response. This was our previous responses:\n\n\n"
@@ -18,8 +21,14 @@ gpt:
   top-p: 0.9
   tool-choice: "auto"
 
-media:
-  output-dir: "${TMP_DIR:tmp}"
-
 daily-message:
   alias: "daily"
+  no_stats: "No stats available."
+  stats_header: "Stats for %s"
+  stats_header_all: "Stats for all users"
+  stats_footer: "Total users: ${totalUsers}"
+  user_stats: "${userId} - ${score} points ${is_winner}"
+  user_stats_no_score: "User: ${userId}, No score available"
+  winner_exists: "Winner of the day is %s with %s points."
+  user_already_registered: "You already been registered."
+  user_registered: "User %s has been registered."

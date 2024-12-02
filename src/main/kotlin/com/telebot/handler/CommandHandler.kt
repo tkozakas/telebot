@@ -71,10 +71,12 @@ class CommandHandler(
     command(Command.Fact.command) {
         val args = message.text?.split(" ") ?: emptyList()
         val subCommand = args.getOrNull(1)?.lowercase()
+        val comment = args.drop(2).joinToString(" ")
 
         factService.handleFactCommand(
             args = args,
             subCommand = subCommand,
+            comment = comment,
             sendMessage = { text -> sendMessage(text = text) }
         )
     }

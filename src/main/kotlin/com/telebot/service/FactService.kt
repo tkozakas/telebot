@@ -17,12 +17,12 @@ class FactService(
     suspend fun handleFactCommand(
         args: List<String>,
         subCommand: String?,
+        comment: String,
         sendMessage: suspend (String) -> Unit
     ) {
         when (subCommand) {
             SubCommand.ADD.name.lowercase() -> {
-                val fact = args.drop(1).joinToString(" ")
-                addFact(fact)
+                addFact(comment)
                 sendMessage(FACT_ADDED)
             }
 

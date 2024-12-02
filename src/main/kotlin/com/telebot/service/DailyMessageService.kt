@@ -7,7 +7,6 @@ import com.telebot.properties.DailyMessageTemplate
 import com.telebot.repository.SentenceRepository
 import com.telebot.repository.StatRepository
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Service
 import java.time.Year
@@ -20,6 +19,7 @@ class DailyMessageService(
 ) {
     companion object Constants {
         var CURRENT_YEAR = Year.now().value
+        val randomDelayRange = 500L..1000L
     }
 
     suspend fun handleDailyMessage(
@@ -142,15 +142,13 @@ class DailyMessageService(
 
         val sentences = getRandomGroupSentences().sortedBy { it.orderNumber }
         runBlocking {
-            sentences.forEachIndexed { index, sentence ->
-                launch {
-                    delay(500L * (index + 1))
-                    val formattedSentence = if (index == sentences.lastIndex) {
-                        sentence.text?.format(winner?.username ?: "Unknown")
-                    } else {
-                        sentence.text
+            sentences.forEachIndexed { _, sentence ->
+                val delayTime = randomDelayRange.random()
+                delay(delayTime)
+                sentence.text?.format(winner?.username).let {
+                    if (it != null) {
+                        sendMessage(it)
                     }
-                    formattedSentence?.let { sendMessage(it) }
                 }
             }
         }
@@ -185,5 +183,13 @@ class DailyMessageService(
             this.isWinner = false
             this.score = 0
         }.let { statRepository.save(it) }
+    }
+
+    fun resetWinner() {
+        statRepository.resetWinner(CURRENT_YEAR)
+    }
+
+    fun getChatIds(): List<Long?> {
+        return statRepository.findAll().map { it.chatId }.distinct()
     }
 }

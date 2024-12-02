@@ -21,6 +21,13 @@ gpt:
   top-p: 0.9
   tool-choice: "auto"
 
+
+schedule:
+  daily-message: 0 0 12 * * *
+  winner-reset: 0 0 0 * * *
+
+#  meme-post: 0 0 * * * * TODO: Implement this
+
 daily-message:
   alias: "daily"
   no_stats: "No stats available."

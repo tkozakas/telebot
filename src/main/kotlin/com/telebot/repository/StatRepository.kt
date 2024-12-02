@@ -17,4 +17,12 @@ interface StatRepository : JpaRepository<Stat, Long> {
     )
     fun setWinnerByChatIdAndUserIdAndYear(chatId: Long, userId: Long, year: Int)
     fun findByChatId(chatId: Long): List<Stat>
+
+    @Modifying
+    @Transactional
+    @Query(
+        "UPDATE Stat s SET s.isWinner = false " +
+                "WHERE s.year = ?1"
+    )
+    fun resetWinner(currentYear: Int)
 }

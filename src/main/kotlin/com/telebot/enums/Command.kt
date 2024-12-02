@@ -1,8 +1,8 @@
 package com.telebot.enums
 
-
 sealed class Command(
     val command: String,
+    val description: String,
     val listExcluded: Boolean = false,
     val subCommands: List<SubCommand> = emptyList()
 ) {
@@ -16,23 +16,53 @@ sealed class Command(
         }
     }
 
-    data object Menu : Command("${PREFIX}menu", subCommands = emptyList())
-    data object Help : Command("${PREFIX}help", true, emptyList())
-    data object Start : Command("${PREFIX}start", true, emptyList())
+    data object Menu : Command(
+        "${PREFIX}menu",
+        "Displays the menu",
+        subCommands = emptyList()
+    )
 
-    data object GPT :
-        Command("${PREFIX}gpt", subCommands = listOf(SubCommand.MEMORY, SubCommand.FORGET))
+    data object Help : Command(
+        "${PREFIX}help",
+        "Displays this help message",
+        true,
+        emptyList()
+    )
 
-    data object Meme :
-        Command("${PREFIX}meme", subCommands = listOf(SubCommand.LIST, SubCommand.ADD, SubCommand.REMOVE))
+    data object Start : Command(
+        "${PREFIX}start",
+        "Starts the bot",
+        true,
+        emptyList()
+    )
 
-    data object Sticker :
-        Command("${PREFIX}sticker", subCommands = listOf(SubCommand.LIST, SubCommand.ADD, SubCommand.REMOVE))
+    data object GPT : Command(
+        "${PREFIX}gpt",
+        "Interact with the GPT model",
+        subCommands = listOf(SubCommand.MEMORY, SubCommand.FORGET)
+    )
 
-    data object Fact :
-        Command("${PREFIX}fact", subCommands = listOf(SubCommand.ADD))
+    data object Meme : Command(
+        "${PREFIX}meme",
+        "Manage memes",
+        subCommands = listOf(SubCommand.LIST, SubCommand.ADD, SubCommand.REMOVE)
+    )
 
-    data object DailyMessage :
-        Command(PREFIX, subCommands = listOf(SubCommand.REGISTER, SubCommand.ALL, SubCommand.STATS))
+    data object Sticker : Command(
+        "${PREFIX}sticker",
+        "Manage stickers",
+        subCommands = listOf(SubCommand.LIST, SubCommand.ADD, SubCommand.REMOVE)
+    )
+
+    data object Fact : Command(
+        "${PREFIX}fact",
+        "Add or manage facts",
+        subCommands = listOf(SubCommand.ADD)
+    )
+
+    data object DailyMessage : Command(
+        "$PREFIX%s",
+        "Daily message",
+        subCommands = listOf(SubCommand.REGISTER, SubCommand.ALL, SubCommand.STATS)
+    )
 }
-

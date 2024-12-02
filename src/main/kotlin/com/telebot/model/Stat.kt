@@ -3,7 +3,10 @@ package com.telebot.model
 import jakarta.persistence.*
 
 @Entity
-@Table(name = "stats")
+@Table(
+    name = "stats",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["username", "year"])]
+)
 open class Stat {
     @Id
     @GeneratedValue

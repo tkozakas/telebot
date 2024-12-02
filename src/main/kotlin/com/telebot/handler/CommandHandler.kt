@@ -29,27 +29,13 @@ class CommandHandler(
             chatId = chatId,
             username = username,
             args = args,
-            subCommand = subCommand,
-            sendMessage = { text -> sendMessage(text = text) },
+            subCommand = subCommand, sendMessage = { text -> sendMessage(text = text, parseMode = "Markdown") },
             sendDocument = { filePath -> sendDocument(filePath) },
             input = { file -> input(file) }
         )
     }
 
-    command(Command.Meme.command) {
-        val chatId = message.chat.id
-        val args = message.text?.split(" ") ?: emptyList()
-
-        memeService.handleMemeCommand(
-            args = args,
-            chatId = chatId,
-            sendMessage = { text -> sendMessage(text = text) },
-            sendMediaGroup = { media -> sendMediaGroup(media = media) },
-            input = { file -> input(file) }
-        )
-    }
-
-    command(Command.DailyMessage.command + alias) {
+    command(Command.DailyMessage.command.format(alias)) {
         val chatId = message.chat.id
         val userId = message.from?.id ?: 0
         val username = message.from?.username ?: "User"
@@ -62,9 +48,19 @@ class CommandHandler(
             userId = userId,
             username = username,
             subCommand = subCommand,
-            year = year,
-            sendMessage = { text -> sendMessage(text = text) }
+            year = year, sendMessage = { text -> sendMessage(text =text, parseMode = "Markdown") }
         )
+    }
+
+    command(Command.Meme.command) {
+        val chatId = message.chat.id
+        val args = message.text?.split(" ") ?: emptyList()
+
+        memeService.handleMemeCommand(args = args,
+            chatId = chatId,
+            sendMessage = { text -> sendMessage(text = text) },
+            sendMediaGroup = { media -> sendMediaGroup(media = media) },
+            input = { file -> input(file) })
     }
 
     command(Command.Fact.command) {
@@ -81,21 +77,24 @@ class CommandHandler(
     }
 
     command(Command.Help.command) {
-        sendMessage(helpMessage())
+        sendMessage(helpMessage(alias), parseMode = "Markdown")
     }
 
     command(Command.Start.command) {
-        sendMessage(helpMessage())
+        sendMessage(helpMessage(alias), parseMode = "Markdown")
     }
 })
 
-private fun helpMessage(): String {
+private fun helpMessage(alias: String): String {
     return """
-        **Available Commands:**
-        ${
-        Command.values().joinToString("\n") {
-            "- `${it.command}`: `<${it.subCommands.joinToString(", ")}>`"
-        }
+        |*Available Commands:*
+        |
+        |${
+        Command.values().filterNot { command -> command.listExcluded }.joinToString("\n") {
+                "- `${it.command.format(alias)}` — ${it.description} `<${
+                    it.subCommands.joinToString(", ").lowercase()
+                }>`"
+            }
     }
-    """.trimIndent()
+    """.trimMargin()
 }

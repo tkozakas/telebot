@@ -133,38 +133,35 @@ class DailyMessageService(
         }
 
         val currentWinner = stats.find { it.isWinner == true && it.chatId == chatId && it.year == CURRENT_YEAR }
-        if (currentWinner != null) {
+        val winner = if (currentWinner != null) {
             sendMessage(dailyMessageTemplate.winnerExists.format(currentWinner.username, currentWinner.score))
+            return
         } else {
-            val randomWinner = stats.randomOrNull()
-            randomWinner?.let {
-                it.isWinner = true
-                sendMessage(dailyMessageTemplate.winnerExists.format(it.username, it.score))
-            }
+            stats.randomOrNull()?.apply { isWinner = true }
         }
 
-        val sentences = getRandomGroupSentences()
+        val sentences = getRandomGroupSentences().sortedBy { it.orderNumber }
         runBlocking {
             sentences.forEachIndexed { index, sentence ->
                 launch {
-                    delay(1000L * (index + 1))
-                    val formattedSentence =
-                        if (index == sentences.lastIndex) sentence.text?.format(currentWinner?.userId ?: "")
-                        else sentence.text
+                    delay(500L * (index + 1))
+                    val formattedSentence = if (index == sentences.lastIndex) {
+                        sentence.text?.format(winner?.username ?: "Unknown")
+                    } else {
+                        sentence.text
+                    }
                     formattedSentence?.let { sendMessage(it) }
                 }
             }
         }
 
-        currentWinner?.let {
-            it.userId?.let { it1 -> setWinnerByChatIdAndUserIdAndYear(chatId, it1, CURRENT_YEAR) }
-        }
+        setWinnerByChatIdAndUserIdAndYear(chatId, winner?.userId ?: return, CURRENT_YEAR)
     }
 
 
     fun getRandomGroupSentences(): List<Sentence> {
-        val groupIds = sentenceRepository.findGroupIdsByDailyMessageId()
-        return sentenceRepository.findRandomSentenceByGroupIds(groupIds)
+        val groupId = sentenceRepository.findRandomGroupId() ?: return emptyList()
+        return sentenceRepository.findSentencesByGroupId(groupId)
     }
 
     fun getStatByChatIdAndYear(chatId: Long, year: Int): List<Stat> {

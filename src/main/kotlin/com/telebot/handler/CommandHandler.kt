@@ -52,6 +52,7 @@ class CommandHandler(
     command(Command.DailyMessage.command + alias) {
         val chatId = message.chat.id
         val userId = message.from?.id ?: 0
+        val username = message.from?.username ?: "User"
         val args = message.text?.split(" ") ?: emptyList()
         val subCommand = args.getOrNull(1)?.lowercase()
         val year = args.getOrNull(2)?.toIntOrNull() ?: DailyMessageService.CURRENT_YEAR
@@ -59,11 +60,11 @@ class CommandHandler(
         dailyMessageService.handleDailyMessage(
             chatId = chatId,
             userId = userId,
+            username = username,
             subCommand = subCommand,
             year = year,
             alias = alias,
-            sendMessage = { text -> sendMessage(text = text) },
-            getChatMember = { userid -> getChatMember(userid) }
+            sendMessage = { text -> sendMessage(text = text) }
         )
     }
 

@@ -16,6 +16,9 @@ open class Stat {
     @Column(name = "user_id")
     open var userId: Long? = null
 
+    @Column(name = "username")
+    open var username: String? = null
+
     @Column(name = "is_winner")
     open var isWinner: Boolean? = null
 

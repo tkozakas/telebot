@@ -7,6 +7,7 @@ import java.util.*
 @Table(name = "subreddits")
 open class Subreddit {
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "subreddit_id", nullable = false)
     open var id: UUID? = null
 

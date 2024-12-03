@@ -7,7 +7,7 @@ import jakarta.persistence.*
 open class Sentence {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "sentence_id", nullable = false)
     open var id: Long? = null
 

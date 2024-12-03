@@ -7,25 +7,20 @@ import java.util.*
 @Table(name = "stickers")
 open class Sticker {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "sticker_id", nullable = false)
     open var id: UUID? = null
 
-    @Column(name = "emoji")
-    open var emoji: String? = null
+    @ManyToOne
+    @JoinColumn(name = "chat_id")
+    open var chat: Chat? = null
 
     @Column(name = "file_id")
     open var fileId: String? = null
 
-    @Column(name = "file_size")
-    open var fileSize: Int? = null
+    @Column(name = "emoji")
+    open var emoji: String? = null
 
-    @Column(name = "is_animated")
-    open var isAnimated: Boolean? = null
-
-    @Column(name = "is_video")
-    open var isVideo: Boolean? = null
-
-    @Column(name = "set_name")
-    open var setName: String? = null
+    @Column(name = "sticker_set_name")
+    open var stickerSetName: String? = null
 }

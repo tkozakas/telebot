@@ -40,11 +40,11 @@ class TtsService(
         )
 
         withContext(Dispatchers.IO) {
-            val audio = ttsClient.generateSpeech(
-                apiKey = ttsProperties.token,
-                voiceId = ttsProperties.voiceId,
-                request = request
-            )
+            val audio = getAudio(request)?.takeIf { it.isNotEmpty() }
+            if (audio == null) {
+                sendMessage(NO_RESPONSE)
+                return@withContext
+            }
 
             val title = gptService.processPrompt(
                 chatId = 0,
@@ -57,12 +57,22 @@ class TtsService(
                 deleteOnExit()
             }
 
+            Files.write(tempFile.toPath(), audio)
+            sendAudio(input(tempFile))
+        }
+    }
+
+    private fun getAudio(request: TtsRequestDTO): ByteArray? {
+        for (i in ttsProperties.token.indices) {
+            val audio = ttsClient.generateSpeech(
+                apiKey = ttsProperties.token[i],
+                voiceId = ttsProperties.voiceId,
+                request = request
+            )
             if (audio != null) {
-                Files.write(tempFile.toPath(), audio)
-                sendAudio(input(tempFile))
-            } else {
-                sendMessage(NO_RESPONSE)
+                return audio
             }
         }
+        return null
     }
 }

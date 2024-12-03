@@ -1,13 +1,14 @@
 package com.telebot.service
 
 import com.telebot.enums.SubCommand
+import com.telebot.model.Chat
 import com.telebot.model.Fact
-import com.telebot.repository.FactRepository
+import com.telebot.repository.ChatRepository
 import org.springframework.stereotype.Service
 
 @Service
 class FactService(
-    private val factRepository: FactRepository
+    private val chatRepository: ChatRepository
 ) {
     companion object Constants {
         const val NO_FACTS = "No facts available."
@@ -15,6 +16,7 @@ class FactService(
     }
 
     suspend fun handleFactCommand(
+        chat: Chat,
         args: List<String>,
         subCommand: String?,
         comment: String,
@@ -22,7 +24,7 @@ class FactService(
     ) {
         when (subCommand) {
             SubCommand.ADD.name.lowercase() -> {
-                addFact(comment)
+                addFact(chat, comment)
                 sendMessage(FACT_ADDED)
             }
 
@@ -33,13 +35,16 @@ class FactService(
         }
     }
 
-    private fun addFact(fact: String) {
-        Fact().apply {
+    private fun addFact(chat: Chat, fact: String) {
+        chat.facts.add(Fact().apply {
             this.comment = fact
-        }.let { factRepository.save(it) }
+            this.chat = chat
+        })
+        chatRepository.save(chat)
     }
 
     fun getRandomFact(): String {
-        return factRepository.findRandomFact()
+        val facts = chatRepository.findAll().flatMap { it.facts }
+        return facts.shuffled().firstOrNull()?.comment ?: ""
     }
 }

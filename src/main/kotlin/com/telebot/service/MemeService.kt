@@ -3,9 +3,11 @@ package com.telebot.service
 import com.telebot.client.RedditClient
 import com.telebot.dto.RedditResponseDTO
 import com.telebot.enums.SubCommand
+import com.telebot.model.Chat
 import com.telebot.model.Subreddit
-import com.telebot.repository.SubredditRepository
+import com.telebot.repository.ChatRepository
 import com.telebot.util.MediaUtil
+import com.telebot.util.PrinterUtil
 import io.github.dehuckakpyt.telegrambot.model.telegram.InputMedia
 import io.github.dehuckakpyt.telegrambot.model.telegram.InputMediaPhoto
 import io.github.dehuckakpyt.telegrambot.model.telegram.InputMediaVideo
@@ -15,9 +17,10 @@ import java.io.File
 
 @Service
 class MemeService(
+    private val chatRepository: ChatRepository,
     private val redditClient: RedditClient,
-    private val subredditRepository: SubredditRepository,
-    private val mediaUtil: MediaUtil
+    private val mediaUtil: MediaUtil,
+    private val printerUtil: PrinterUtil
 ) {
     companion object Constants {
         const val REDDIT_URL = "https://www.reddit.com/r/"
@@ -32,68 +35,66 @@ class MemeService(
 
     suspend fun handleMemeCommand(
         args: List<String>,
-        chatId: Long,
+        subCommand: String?,
+        chat: Chat,
         sendMessage: suspend (String) -> Unit,
         sendMediaGroup: suspend (List<InputMedia>) -> Unit,
         input: (File) -> ContentInput
     ) {
-        val subCommand = args.getOrNull(1)?.lowercase()
         val subredditName = args.getOrNull(2)?.removePrefix(REDDIT_URL)
-
         when (subCommand) {
-            SubCommand.LIST.name.lowercase() -> handleListSubreddits(chatId, sendMessage)
-            SubCommand.ADD.name.lowercase() -> handleAddSubreddit(chatId, subredditName, sendMessage)
-            SubCommand.REMOVE.name.lowercase() -> handleRemoveSubreddit(chatId, subredditName, sendMessage)
-            else -> handleDefaultCommand(chatId, args, subCommand, sendMessage, sendMediaGroup, input)
+            SubCommand.LIST.name.lowercase() -> handleListSubreddits(chat, sendMessage)
+            SubCommand.ADD.name.lowercase() -> handleAddSubreddit(chat, subredditName, sendMessage)
+            SubCommand.REMOVE.name.lowercase() -> handleRemoveSubreddit(chat, subredditName, sendMessage)
+            else -> handleDefaultCommand(chat, args, subCommand, sendMessage, sendMediaGroup, input)
         }
     }
 
-    private suspend fun handleListSubreddits(chatId: Long, sendMessage: suspend (String) -> Unit) {
-        findByChatId(chatId).takeIf { it.isNotEmpty() }
-            ?.joinToString("\n") { it.subredditName }
-            ?.let { sendMessage(it) }
-            ?: sendMessage(EMPTY_SUBREDDIT_LIST)
+    private suspend fun handleListSubreddits(chat: Chat, sendMessage: suspend (String) -> Unit) {
+        val subreddits = chat.subreddits
+        if (subreddits.isEmpty()) {
+            sendMessage(EMPTY_SUBREDDIT_LIST)
+            return
+        }
+        return sendMessage(printerUtil.printSubreddits(subreddits))
     }
 
     private suspend fun handleAddSubreddit(
-        chatId: Long,
+        chat: Chat,
         subredditName: String?,
         sendMessage: suspend (String) -> Unit
     ) {
-        subredditName?.takeIf { isValidSubreddit(chatId, it) }
+        subredditName?.takeIf { isValidSubreddit(chat, it) }
             ?.takeIf { it.isNotBlank() }
             ?.let {
-                addSubreddit(chatId, it)
+                addSubreddit(chat, it)
                 sendMessage(SUBREDDIT_ADDED.format(it))
             }
             ?: sendMessage(PROVIDE_SUBREDDIT_NAME)
     }
 
     private suspend fun handleRemoveSubreddit(
-        chatId: Long,
+        chat: Chat,
         subredditName: String?,
         sendMessage: suspend (String) -> Unit
     ) {
         subredditName?.takeIf { it.isNotBlank() }
             ?.let {
-                removeSubreddit(chatId, it)
+                removeSubreddit(chat, it)
                 sendMessage(SUBREDDIT_REMOVED.format(it))
             }
             ?: sendMessage(PROVIDE_SUBREDDIT_NAME)
     }
 
     private suspend fun handleDefaultCommand(
-        chatId: Long,
+        chat: Chat?,
         args: List<String>,
         subredditName: String?,
         sendMessage: suspend (String) -> Unit,
         sendMediaGroup: suspend (List<InputMedia>) -> Unit,
         input: (File) -> ContentInput
     ) {
-        val subreddit = subredditName ?: findByChatId(chatId)
-            .takeIf { it.isNotEmpty() }
-            ?.randomOrNull()?.subredditName
-
+        val subreddit = chat?.subreddits?.firstOrNull()?.subredditName ?: subredditName
         if (subreddit != null && subreddit.isBlank()) {
             sendMessage(NO_SUBREDDITS_FOUND)
             return
@@ -128,25 +129,23 @@ class MemeService(
         }
     }
 
-    fun findByChatId(chatId: Long): List<Subreddit> {
-        return subredditRepository.findByChatId(chatId)
-    }
-
-    fun addSubreddit(chatId: Long, subreddit: String) {
-        subredditRepository.save(
-            Subreddit(
-                chatId = chatId,
-                subredditName = subreddit
-            )
+    fun addSubreddit(chat: Chat, subreddit: String) {
+        chat.subreddits.add(
+            Subreddit().apply {
+                this.chat = chat
+                this.subredditName = subreddit
+            }
         )
+        chatRepository.save(chat)
     }
 
-    fun isValidSubreddit(chatId: Long, subreddit: String): Boolean {
+    fun isValidSubreddit(chat: Chat, subreddit: String): Boolean {
         return redditClient.getRedditMemes(subreddit, 1).memes.isNotEmpty()
     }
 
-    fun removeSubreddit(chatId: Long, it: String) {
-        subredditRepository.deleteByChatIdAndSubredditName(chatId, it)
+    fun removeSubreddit(chat: Chat, subreddit: String) {
+        chat.subreddits.remove(chat.subreddits.find { it.subredditName == subreddit })
+        chatRepository.save(chat)
     }
 
     fun getRedditMemes(subredditName: String, count: Int): List<RedditResponseDTO.RedditPostDTO> {

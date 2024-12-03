@@ -3,20 +3,17 @@ package com.telebot.model
 import jakarta.persistence.*
 
 @Entity
-@Table(
-    name = "stats",
-    uniqueConstraints = [UniqueConstraint(columnNames = ["username", "year"])]
-)
+@Table(name = "stats")
 open class Stat {
     @Id
-    @GeneratedValue
     @Column(name = "stats_id", nullable = false)
     open var id: Long? = null
 
-    @Column(name = "chat_id")
-    open var chatId: Long? = null
+    @ManyToOne
+    @JoinColumn(name = "chat_id")
+    open var chat: Chat? = null
 
-    @Column(name = "user_id")
+    @Column(name = "user_id", nullable = false)
     open var userId: Long? = null
 
     @Column(name = "username")
@@ -30,4 +27,5 @@ open class Stat {
 
     @Column(name = "year")
     open var year: Int? = null
+
 }

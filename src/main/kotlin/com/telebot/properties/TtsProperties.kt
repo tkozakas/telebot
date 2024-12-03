@@ -4,7 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 
 @ConfigurationProperties(prefix = "tts")
 data class TtsProperties(
-    val token: String,
+    val token: List<String>,
     val voiceId: String,
     val modelId: String,
     val stability: Double,

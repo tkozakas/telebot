@@ -3,10 +3,11 @@ package com.telebot.model
 import jakarta.persistence.*
 
 @Entity
-@Table(name = "sentence")
+@Table(name = "sentences")
 open class Sentence {
+
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "sentence_id", nullable = false)
     open var id: Long? = null
 

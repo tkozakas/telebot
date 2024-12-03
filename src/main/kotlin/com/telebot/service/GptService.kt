@@ -4,6 +4,7 @@ import com.telebot.client.GptClient
 import com.telebot.dto.GptRequestDTO
 import com.telebot.dto.GptResponseDTO
 import com.telebot.enums.SubCommand
+import com.telebot.model.Chat
 import com.telebot.properties.GptProperties
 import io.github.dehuckakpyt.telegrambot.model.telegram.input.ContentInput
 import org.springframework.stereotype.Service
@@ -25,7 +26,7 @@ class GptService(
     }
 
     suspend fun handleGptCommand(
-        chatId: Long,
+        chat: Chat,
         username: String,
         args: List<String>,
         subCommand: String?,
@@ -33,6 +34,7 @@ class GptService(
         sendDocument: suspend (ContentInput) -> Unit,
         input: (File) -> ContentInput
     ) {
+        val chatId = chat.telegramChatId ?: return
         when (subCommand) {
             SubCommand.MEMORY.name.lowercase() -> getChatHistory(chatId)?.let { file ->
                 val contextInput = input(file.toAbsolutePath().toFile())

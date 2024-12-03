@@ -53,15 +53,15 @@ class GptService(
         }
     }
 
-    fun processPrompt(chatId: Long, username: String, prompt: String, saveInMemory: Boolean): String? {
+    fun processPrompt(chatId: Long, username: String, prompt: String, useMemory: Boolean): String? {
         val userMessage = GptRequestDTO.Message(role = "user", content = "$username: $prompt")
-        saveInMemory.let { gptMessageStorageService.addMessage(chatId, userMessage) }
+        useMemory.let { gptMessageStorageService.addMessage(chatId, userMessage) }
         val messages = gptMessageStorageService.getMessages(chatId)
         val gptRequest = GptRequestDTO(messages = messages, gptProperties = gptProperties)
         val gptResponse = gptClient.getChatCompletion("Bearer " + gptProperties.token, gptRequest)
         val botMessage = extractBotMessage(gptResponse)
         if (botMessage != null) {
-            saveInMemory.let { gptMessageStorageService.addMessage(chatId, botMessage) }
+            useMemory.let { gptMessageStorageService.addMessage(chatId, botMessage) }
             return botMessage.content
         }
         return null

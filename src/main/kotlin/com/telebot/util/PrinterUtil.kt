@@ -42,17 +42,22 @@ class PrinterUtil(
     }
 
     fun printStickers(stickers: List<Sticker>): String {
-        val uniqueStickerSetName = stickers.mapNotNull { it.stickerSetName }.toSet()
+        val uniqueStickerSetNames = stickers
+            .mapNotNull { it.stickerSetName }
+            .toSet()
+            .toList()
+
         return """
-            |*Available Stickers:*
-            |
-            |${
-            stickers.joinToString("\n") { sticker ->
-                "- `${sticker.emoji ?: "No Emoji"}` — Pack: `${sticker.stickerSetName ?: "Unknown Set"}`"
+        |*Available Sticker Sets:*
+        |
+        |${
+            uniqueStickerSetNames.joinToString("\n") { stickerSetName ->
+                "- `${stickerSetName}`"
             }
         }
-            """.trimMargin()
+        """.trimMargin()
     }
+
 
     fun printSubreddits(subreddits: MutableSet<Subreddit>): String {
         return """
@@ -63,7 +68,7 @@ class PrinterUtil(
                 "- `${subreddit.subredditName}`"
             }
         }
-                """.trimMargin()
+        """.trimMargin()
 
     }
 }

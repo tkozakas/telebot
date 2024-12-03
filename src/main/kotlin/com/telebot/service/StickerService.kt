@@ -7,6 +7,7 @@ import com.telebot.repository.ChatRepository
 import com.telebot.util.PrinterUtil
 import io.github.dehuckakpyt.telegrambot.model.telegram.StickerSet
 import io.github.dehuckakpyt.telegrambot.model.telegram.input.ContentInput
+import jakarta.transaction.Transactional
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.springframework.stereotype.Service
@@ -19,6 +20,7 @@ class StickerService(
 ) {
     companion object Constants {
         const val TELEGRAM_STICKER_URL = "https://t.me/addstickers/"
+        const val STICKER_SET_ALREADY_EXISTS = "Sticker set %s already exists"
         const val NO_STICKERS_FOUND = "No stickers found"
         const val INVALID_STICKER_NAME = "Invalid sticker name"
         const val STICKER_ADDED = "Sticker %s added"
@@ -31,14 +33,14 @@ class StickerService(
         subCommand: String?,
         getStickerSet: suspend (String) -> StickerSet,
         sendMessage: suspend (String) -> Unit,
-        sendSticker: suspend (ContentInput) -> Unit,
+        sendSticker: suspend (String) -> Unit,
         input: (File) -> ContentInput
     ) {
         when (subCommand) {
             SubCommand.LIST.name.lowercase() -> handleListStickers(sendMessage)
             SubCommand.ADD.name.lowercase() -> handleAddSticker(chat, args, sendMessage, getStickerSet)
             SubCommand.REMOVE.name.lowercase() -> handleRemoveSticker(chat, args, sendMessage)
-            else -> handleDefaultCommand(chat, args, sendMessage, sendSticker, input)
+            else -> handleDefaultCommand(chat, sendMessage, sendSticker)
         }
     }
 
@@ -61,6 +63,10 @@ class StickerService(
             sendMessage(INVALID_STICKER_NAME)
             return
         }
+        if (chat.stickers.any { it.stickerSetName == stickerName }) {
+            sendMessage(STICKER_SET_ALREADY_EXISTS.format(stickerName))
+            return
+        }
         val telegramStickers = getStickerSet(stickerName).stickers
         val stickers = telegramStickers.map { sticker ->
             Sticker().apply {
@@ -77,17 +83,35 @@ class StickerService(
         sendMessage(STICKER_ADDED.format(stickerName))
     }
 
-    private fun handleRemoveSticker(chat: Chat, args: List<String>, sendMessage: suspend (String) -> Unit) {
-        TODO("Not yet implemented")
+    @Transactional
+    suspend fun handleRemoveSticker(chat: Chat, args: List<String>, sendMessage: suspend (String) -> Unit) {
+        val stickerName = args.getOrNull(2)
+        if (stickerName.isNullOrBlank()) {
+            sendMessage(INVALID_STICKER_NAME)
+            return
+        }
+        val stickers = chat.stickers.filter { it.stickerSetName == stickerName }.toSet()
+        if (stickers.isEmpty()) {
+            sendMessage(NO_STICKERS_FOUND)
+            return
+        }
+        chat.stickers.removeAll(stickers)
+        withContext(Dispatchers.IO) {
+            chatRepository.save(chat)
+        }
+        sendMessage(STICKER_REMOVED.format(stickerName))
     }
 
-    private fun handleDefaultCommand(
+    private suspend fun handleDefaultCommand(
         chat: Chat,
-        args: List<String>,
         sendMessage: suspend (String) -> Unit,
-        sendSticker: suspend (ContentInput) -> Unit,
-        input: (File) -> ContentInput
+        sendSticker: suspend (String) -> Unit
     ) {
-
+        val sticker = chat.stickers.randomOrNull()
+        if (sticker == null) {
+            sendMessage(NO_STICKERS_FOUND)
+            return
+        }
+        sticker.fileId?.let { sendSticker(it) }
     }
 }

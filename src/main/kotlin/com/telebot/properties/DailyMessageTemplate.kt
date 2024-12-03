@@ -4,6 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 
 @ConfigurationProperties(prefix = "daily-message")
 data class DailyMessageTemplate(
+    val alias: String,
     val noStats: String,
     val statsHeader: String,
     val statsHeaderAll: String,

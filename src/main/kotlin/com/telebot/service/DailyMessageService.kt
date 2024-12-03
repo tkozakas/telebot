@@ -133,7 +133,7 @@ class DailyMessageService(
             sentences.forEachIndexed { _, sentence ->
                 val delayTime = randomDelayRange.random()
                 delay(delayTime)
-                sentence.text?.format(winner?.username).let {
+                sentence.text?.format(dailyMessageTemplate.alias, winner?.username).let {
                     if (it != null) {
                         sendMessage(it)
                     }
@@ -161,6 +161,8 @@ class DailyMessageService(
             this.userId = userId
             this.username = username
             this.year = CURRENT_YEAR
+            this.score = 0
+            this.isWinner = false
         })
         chatRepository.save(chat)
     }

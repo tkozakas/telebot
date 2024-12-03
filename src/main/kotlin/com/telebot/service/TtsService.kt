@@ -9,6 +9,7 @@ import kotlinx.coroutines.withContext
 import org.springframework.stereotype.Service
 import java.io.File
 import java.nio.file.Files
+import kotlin.io.path.absolutePathString
 
 @Service
 class TtsService(
@@ -24,7 +25,7 @@ class TtsService(
 
     suspend fun handleTtsCommand(
         messageText: String,
-        sendAudio: suspend (ContentInput) -> Unit,
+        sendAudio: suspend (String) -> Unit,
         sendMessage: suspend (String) -> Unit,
         input: (File) -> ContentInput
     ) {
@@ -56,9 +57,8 @@ class TtsService(
             val tempFile = File.createTempFile(title, ".mp3").apply {
                 deleteOnExit()
             }
-
             Files.write(tempFile.toPath(), audio)
-            sendAudio(input(tempFile))
+            sendAudio(tempFile.toPath().absolutePathString())
         }
     }
 

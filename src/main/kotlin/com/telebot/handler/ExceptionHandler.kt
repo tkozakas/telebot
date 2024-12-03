@@ -11,7 +11,7 @@ class ExceptionHandler(bot: TelegramBot, template: MessageTemplate, templater: T
 
     override suspend fun caught(chat: Chat, ex: Throwable) {
         when (ex) {
-            is CustomException -> bot.sendMessage(chat.id, ex.localizedMessage)
+            is CustomException -> "Caught CustomException: ${ex.message}"
             else -> super.caught(chat, ex)
         }
     }

@@ -4,6 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 
 @ConfigurationProperties(prefix = "gpt")
 data class GptProperties(
+    val token: String,
     val model: String,
     val n: Int,
     val frequencyPenalty: Double,

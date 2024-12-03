@@ -46,22 +46,22 @@ class GptService(
 
             else -> args.drop(1).joinToString(" ")
                 .takeIf { it.isNotBlank() }
-                ?.let { prompt -> processPrompt(chatId, username, prompt)?.let { sendMessage(it) } }
+                ?.let { prompt -> processPrompt(chatId, username, prompt, true)?.let { sendMessage(it) } }
                 ?: sendMessage(
                     if (args.size <= 1) INVALID_PROMPT else NO_RESPONSE
                 )
         }
     }
 
-    private fun processPrompt(chatId: Long, username: String, prompt: String): String? {
+    fun processPrompt(chatId: Long, username: String, prompt: String, saveInMemory: Boolean): String? {
         val userMessage = GptRequestDTO.Message(role = "user", content = "$username: $prompt")
-        gptMessageStorageService.addMessage(chatId, userMessage)
+        saveInMemory.let { gptMessageStorageService.addMessage(chatId, userMessage) }
         val messages = gptMessageStorageService.getMessages(chatId)
         val gptRequest = GptRequestDTO(messages = messages, gptProperties = gptProperties)
-        val gptResponse = gptClient.getChatCompletion(gptRequest)
+        val gptResponse = gptClient.getChatCompletion("Bearer " + gptProperties.token, gptRequest)
         val botMessage = extractBotMessage(gptResponse)
         if (botMessage != null) {
-            gptMessageStorageService.addMessage(chatId, botMessage)
+            saveInMemory.let { gptMessageStorageService.addMessage(chatId, botMessage) }
             return botMessage.content
         }
         return null

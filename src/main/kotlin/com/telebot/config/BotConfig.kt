@@ -1,6 +1,5 @@
 package com.telebot.config
 
-import com.telebot.handler.ExceptionHandler
 import io.github.dehuckakpyt.telegrambot.annotation.EnableTelegramBot
 import io.github.dehuckakpyt.telegrambot.config.TelegramBotConfig
 import io.github.dehuckakpyt.telegrambot.ext.strategy.invocation.chatSync
@@ -16,7 +15,6 @@ class BotConfig {
     fun telegramBotConfig(): TelegramBotConfig = TelegramBotConfig().apply {
         receiving {
             invocationStrategy = { HandlerInvocationStrategy.chatSync }
-            exceptionHandler = { ExceptionHandler(telegramBot, receiving.messageTemplate, templater) }
         }
     }
 }

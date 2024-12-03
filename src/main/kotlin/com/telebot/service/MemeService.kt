@@ -94,7 +94,10 @@ class MemeService(
         sendMediaGroup: suspend (List<InputMedia>) -> Unit,
         input: (File) -> ContentInput
     ) {
-        val subreddit = chat?.subreddits?.firstOrNull()?.subredditName ?: subredditName
+        val subreddit = args.getOrNull(1)?.takeIf { it.isNotBlank() }
+            ?: run {
+                chat?.subreddits?.randomOrNull()?.subredditName ?: subredditName
+            }
         if (subreddit != null && subreddit.isBlank()) {
             sendMessage(NO_SUBREDDITS_FOUND)
             return

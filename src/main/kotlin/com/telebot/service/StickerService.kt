@@ -7,7 +7,6 @@ import com.telebot.repository.ChatRepository
 import com.telebot.util.PrinterUtil
 import io.github.dehuckakpyt.telegrambot.model.telegram.StickerSet
 import io.github.dehuckakpyt.telegrambot.model.telegram.input.ContentInput
-import jakarta.transaction.Transactional
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.springframework.stereotype.Service
@@ -83,7 +82,6 @@ class StickerService(
         sendMessage(STICKER_ADDED.format(stickerName))
     }
 
-    @Transactional
     suspend fun handleRemoveSticker(chat: Chat, args: List<String>, sendMessage: suspend (String) -> Unit) {
         val stickerName = args.getOrNull(2)
         if (stickerName.isNullOrBlank()) {

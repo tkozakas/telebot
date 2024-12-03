@@ -72,7 +72,7 @@ class CommandHandler(
             chat = chat,
             args = args,
             subCommand = subCommand,
-            sendMessage = { text -> sendMessage(text = text) },
+            sendMessage = { text -> sendMessage(text = text, parseMode = "Markdown") },
             sendMediaGroup = { media -> sendMediaGroup(media = media) },
             input = { file -> input(file) })
     }

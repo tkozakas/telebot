@@ -26,7 +26,6 @@ dependencies {
     implementation("io.github.dehuckakpyt.telegrambot:telegram-bot-core:$telegramBotVersion")
     implementation("io.github.dehuckakpyt.telegrambot:telegram-bot-spring:$telegramBotVersion")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion")
-    implementation("org.springframework.boot:spring-boot-starter-aop")
     implementation("org.hibernate:hibernate-core:6.6.3.Final")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.postgresql:postgresql:42.7.4")

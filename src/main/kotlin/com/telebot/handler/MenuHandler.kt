@@ -4,16 +4,19 @@ import com.telebot.enums.Command
 import io.github.dehuckakpyt.telegrambot.annotation.HandlerComponent
 import io.github.dehuckakpyt.telegrambot.factory.keyboard.inlineKeyboard
 import io.github.dehuckakpyt.telegrambot.handler.BotHandler
+import org.springframework.beans.factory.annotation.Value
 
 @HandlerComponent
-class MenuHandler : BotHandler({
+class MenuHandler(
+    @Value("\${daily-message.alias}") private val dailyMessageAlias: String
+) : BotHandler({
 
     command(Command.Menu.command) {
         val buttons = Command.values()
             .filter { !it.listExcluded }
             .map { command ->
                 callbackButton(
-                    command.command.removePrefix(Command.PREFIX),
+                    command.command.removePrefix(Command.PREFIX).format(dailyMessageAlias),
                     CALLBACK_CONSTANT,
                     command.command
                 )
@@ -30,7 +33,7 @@ class MenuHandler : BotHandler({
 
     callback(CALLBACK_CONSTANT) {
         val selectedCommandData = transferred<String>()
-        val selectedCommand = Command.fromCommand(selectedCommandData)
+        val selectedCommand = Command.fromCommand(selectedCommandData.format(dailyMessageAlias))
 
         sendMessage(
             text = selectedCommand.command,

@@ -5,10 +5,24 @@ import io.github.dehuckakpyt.telegrambot.handler.BotUpdateHandler
 import org.slf4j.LoggerFactory
 
 @HandlerComponent
-class UpdateHandler : BotUpdateHandler({
+class UpdateHandler(private val exceptionHandler: CustomExceptionHandler) : BotUpdateHandler({
     val logger = LoggerFactory.getLogger(javaClass)
 
     message {
-        logger.info("Received message with text \"$text\"")
+        val chat = chat
+        try {
+            logger.info("Received message: $text")
+        } catch (e: Exception) {
+            exceptionHandler.execute(chat) {
+                logger.error("Error occurred while processing message: $text", e)
+            }
+        }
     }
-})
+
+    inlineQuery {
+        logger.info("Received query: $query")
+
+        bot.answerInlineQuery(inlineQueryId = id, results = listOf())
+    }
+}) {
+}

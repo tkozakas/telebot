@@ -13,7 +13,7 @@ class CustomExceptionHandler : ExceptionHandler {
         try {
             block()
         } catch (e: Exception) {
-            logger.error("Unexpected exception: ${e.message}")
+            logger.error("Unexpected exception in chat: ${chat.title}: ${e.printStackTrace()}")
         }
     }
 }

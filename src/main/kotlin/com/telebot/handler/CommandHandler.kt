@@ -108,7 +108,9 @@ class CommandHandler(
             args = args,
             subCommand = subCommand,
             comment = comment,
-            sendMessage = { text -> sendMessage(text = text) }
+            sendMessage = { text -> sendMessage(text = text) },
+            sendAudio = { audio, caption -> sendAudio(audio = audio, caption = caption) },
+            input = { file -> input(file) }
         )
     }
 
@@ -117,7 +119,7 @@ class CommandHandler(
 
         ttsService.handleTtsCommand(
             messageText = messageText,
-            sendAudio = { audio -> sendAudio(audio = audio) },
+            sendAudio = { audio, text -> sendAudio(audio = audio, caption = text) },
             sendMessage = { text -> sendMessage(text = text) },
             input = { file -> input(file) }
         )

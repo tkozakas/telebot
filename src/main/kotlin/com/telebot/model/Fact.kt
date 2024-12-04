@@ -6,6 +6,7 @@ import jakarta.persistence.*
 @Table(name = "facts")
 open class Fact {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "fact_id", nullable = false)
     open var id: Long? = null
 

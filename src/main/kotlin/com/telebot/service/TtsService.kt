@@ -9,26 +9,36 @@ import kotlinx.coroutines.withContext
 import org.springframework.stereotype.Service
 import java.io.File
 import java.nio.file.Files
-import kotlin.io.path.absolutePathString
 
 @Service
 class TtsService(
     private val ttsProperties: TtsProperties,
-    private val ttsClient: TtsClient,
-    private val gptService: GptService
+    private val ttsClient: TtsClient
 ) {
     companion object Constants {
         const val NO_RESPONSE = "TTS did not provide a response. Please try again."
-        const val GPT_TITLE_PROMPT = "Create title for the message (10 characters max) based on the message content."
         const val DEFAULT_TITLE = "audio"
     }
 
     suspend fun handleTtsCommand(
         messageText: String,
-        sendAudio: suspend (String) -> Unit,
+        sendAudio: suspend (ContentInput, String) -> Unit,
         sendMessage: suspend (String) -> Unit,
         input: (File) -> ContentInput
     ) {
+        withContext(Dispatchers.IO) {
+            val tempFile = getAudio(messageText)
+            if (tempFile == null) {
+                sendMessage(NO_RESPONSE)
+                return@withContext
+            }
+
+            val contentInput = input(tempFile)
+            sendAudio(contentInput, messageText)
+        }
+    }
+
+    private fun getRequest(messageText: String): TtsRequestDTO {
         val request = TtsRequestDTO(
             text = messageText,
             modelId = ttsProperties.modelId,
@@ -39,40 +49,30 @@ class TtsService(
                 "use_speaker_boost" to ttsProperties.useSpeakerBoost
             )
         )
-
-        withContext(Dispatchers.IO) {
-            val audio = getAudio(request)?.takeIf { it.isNotEmpty() }
-            if (audio == null) {
-                sendMessage(NO_RESPONSE)
-                return@withContext
-            }
-
-            val title = gptService.processPrompt(
-                chatId = 0,
-                username = "TTS",
-                prompt = GPT_TITLE_PROMPT + messageText,
-                useMemory = false
-            ) ?: DEFAULT_TITLE
-
-            val tempFile = File.createTempFile(title, ".mp3").apply {
-                deleteOnExit()
-            }
-            Files.write(tempFile.toPath(), audio)
-            sendAudio(tempFile.toPath().absolutePathString())
-        }
+        return request
     }
 
-    private fun getAudio(request: TtsRequestDTO): ByteArray? {
+    fun getAudio(messageText: String): File? {
+        val request = getRequest(messageText)
+        var audio: ByteArray?
+
         for (i in ttsProperties.token.indices) {
-            val audio = ttsClient.generateSpeech(
-                apiKey = ttsProperties.token[i],
-                voiceId = ttsProperties.voiceId,
-                request = request
-            )
+            try {
+                audio = ttsClient.generateSpeech(
+                    apiKey = ttsProperties.token[i],
+                    voiceId = ttsProperties.voiceId,
+                    request = request
+                )
+            } catch (e: Exception) {
+                continue
+            }
             if (audio != null) {
-                return audio
+                val tempFile = File.createTempFile(DEFAULT_TITLE, ".mp3")
+                Files.write(tempFile.toPath(), audio)
+                return tempFile
             }
         }
         return null
     }
+
 }

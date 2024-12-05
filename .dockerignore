@@ -1,5 +1,8 @@
 # ignore all files in the root directory
 *
+
 # except
 !src/
-!pom.xml
+!gradle.properties
+!build.gradle.kts
+!settings.gradle.kts

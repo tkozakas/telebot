@@ -27,10 +27,12 @@ class GptService(
 
     override suspend fun handle(chat: Chat, update: UpdateContext) {
         val chatId = chat.telegramChatId ?: return
+        val prompt = update.args.drop(1).joinToString(" ")
+
         when (update.subCommand) {
             SubCommand.MEMORY.name.lowercase() -> sendChatHistory(chatId, update.bot)
             SubCommand.FORGET.name.lowercase() -> clearChatHistory(chatId, update.bot)
-            else -> processChat(chatId, update.args.joinToString(" "), update.bot)
+            else -> processChat(chatId, prompt, update.bot)
         }
     }
 

@@ -4,11 +4,10 @@ import com.telebot.client.GptClient
 import com.telebot.dto.GptRequestDTO
 import com.telebot.dto.GptResponseDTO
 import com.telebot.enums.SubCommand
+import com.telebot.handler.TelegramBotActions
 import com.telebot.model.Chat
 import com.telebot.properties.GptProperties
-import io.github.dehuckakpyt.telegrambot.model.telegram.input.ContentInput
 import org.springframework.stereotype.Service
-import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.writeText
 
@@ -30,26 +29,23 @@ class GptService(
         username: String,
         args: List<String>,
         subCommand: String?,
-        sendMessage: suspend (String) -> Unit,
-        sendDocument: suspend (ContentInput) -> Unit,
-        input: (File) -> ContentInput
+        bot: TelegramBotActions
     ) {
         val chatId = chat.telegramChatId ?: return
         when (subCommand) {
             SubCommand.MEMORY.name.lowercase() -> getChatHistory(chatId)?.let { file ->
-                val contextInput = input(file.toAbsolutePath().toFile())
-                sendDocument(contextInput)
-            } ?: sendMessage(CHAT_HISTORY_EMPTY)
+                bot.sendDocument(file.toFile())
+            } ?: bot.sendMessage(CHAT_HISTORY_EMPTY)
 
             SubCommand.FORGET.name.lowercase() -> {
                 clearChatHistory(chatId)
-                sendMessage(CHAT_HISTORY_CLEARED)
+                bot.sendMessage(CHAT_HISTORY_CLEARED)
             }
 
             else -> args.drop(1).joinToString(" ")
                 .takeIf { it.isNotBlank() }
-                ?.let { prompt -> processPrompt(chatId, username, prompt, true)?.let { sendMessage(it) } }
-                ?: sendMessage(
+                ?.let { prompt -> processPrompt(chatId, username, prompt, true)?.let { bot.sendMessage(it) } }
+                ?: bot.sendMessage(
                     if (args.size <= 1) INVALID_PROMPT else NO_RESPONSE
                 )
         }

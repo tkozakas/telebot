@@ -32,13 +32,14 @@ class CommandHandler(
         val subCommand = args.getOrNull(1)?.lowercase()
         val chat = getChat(chatRepository, chatId, chatName, botUsername)
 
+        val bot = TelegramBotActions(chatId = chatId, bot = bot, input = { file -> input(file) })
+
         gptService.handleGptCommand(
             chat = chat,
             username = username,
             args = args,
-            subCommand = subCommand, sendMessage = { text -> sendMessage(text = text, parseMode = "Markdown") },
-            sendDocument = { filePath -> sendDocument(filePath) },
-            input = { file -> input(file) }
+            subCommand = subCommand,
+            bot = bot,
         )
     }
 
@@ -52,12 +53,15 @@ class CommandHandler(
         val year = args.getOrNull(2)?.toIntOrNull() ?: DailyMessageService.CURRENT_YEAR
         val chat = getChat(chatRepository, chatId, chatName, botUsername)
 
+        val bot = TelegramBotActions(chatId = chatId, bot = bot, input = { file -> input(file) })
+
         dailyMessageService.handleDailyMessage(
             chat = chat,
             userId = userId,
             username = username,
             subCommand = subCommand,
-            year = year, sendMessage = { text -> sendMessage(text = text, parseMode = "Markdown") }
+            year = year,
+            bot = bot
         )
     }
 
@@ -68,13 +72,14 @@ class CommandHandler(
         val subCommand = args.getOrNull(1)?.lowercase()
         val chat = getChat(chatRepository, chatId, chatName, botUsername)
 
+        val bot = TelegramBotActions(chatId = chatId, bot = bot, input = { file -> input(file) })
+
         memeService.handleMemeCommand(
             chat = chat,
             args = args,
             subCommand = subCommand,
-            sendMessage = { text -> sendMessage(text = text, parseMode = "Markdown") },
-            sendMediaGroup = { media -> sendMediaGroup(media = media) },
-            input = { file -> input(file) })
+            bot = bot
+        )
     }
 
     command(Command.Sticker.command) {
@@ -84,14 +89,13 @@ class CommandHandler(
         val subCommand = args.getOrNull(1)?.lowercase()
         val chat = getChat(chatRepository, chatId, chatName, botUsername)
 
+        val bot = TelegramBotActions(chatId = chatId, bot = bot, input = { file -> input(file) })
+
         stickerService.handleStickerCommand(
             chat = chat,
             args = args,
             subCommand = subCommand,
-            getStickerSet = { stickerSetName -> getStickerSet(stickerSetName) },
-            sendMessage = { text -> sendMessage(text = text, parseMode = "Markdown") },
-            sendSticker = { sticker -> sendSticker(sticker = sticker) },
-            input = { file -> input(file) }
+            bot = bot
         )
     }
 
@@ -116,12 +120,11 @@ class CommandHandler(
 
     command(Command.Tts.command) {
         val messageText = message.text?.substringAfter(" ") ?: ""
+        val bot = TelegramBotActions(chatId = message.chat.id, bot = bot, input = { file -> input(file) })
 
         ttsService.handleTtsCommand(
             messageText = messageText,
-            sendAudio = { audio, text -> sendAudio(audio = audio, caption = text) },
-            sendMessage = { text -> sendMessage(text = text) },
-            input = { file -> input(file) }
+            bot = bot
         )
     }
 

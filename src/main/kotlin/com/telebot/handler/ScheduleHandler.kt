@@ -23,18 +23,17 @@ class ScheduleHandler(
             val chats = chatRepository.findAll()
             chats.forEach { chat ->
                 chat?.let {
-                    dailyMessageService.chooseRandomWinner(
-                        chat = it,
-                        sendMessage = { text ->
-                            it.telegramChatId?.let { chatId ->
-                                bot.sendMessage(
-                                    chatId = chatId,
-                                    text = text,
-                                    parseMode = "Markdown"
-                                )
-                            }
-                        }
-                    )
+                    it.id?.let { it1 ->
+                        TelegramBotActions(
+                            chatId = it1, bot = bot,
+                            input = null // TODO: Implement input
+                        )
+                    }?.let { it2 ->
+                        dailyMessageService.chooseRandomWinner(
+                            chat = it,
+                            bot = it2
+                        )
+                    }
                 }
             }
         }

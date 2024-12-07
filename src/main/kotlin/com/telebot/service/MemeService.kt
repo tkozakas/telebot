@@ -3,15 +3,14 @@ package com.telebot.service
 import com.telebot.client.RedditClient
 import com.telebot.dto.RedditResponseDTO
 import com.telebot.enums.SubCommand
+import com.telebot.handler.TelegramBotActions
 import com.telebot.model.Chat
 import com.telebot.model.Subreddit
 import com.telebot.repository.ChatRepository
 import com.telebot.util.MediaUtil
 import com.telebot.util.PrinterUtil
-import io.github.dehuckakpyt.telegrambot.model.telegram.InputMedia
 import io.github.dehuckakpyt.telegrambot.model.telegram.InputMediaPhoto
 import io.github.dehuckakpyt.telegrambot.model.telegram.InputMediaVideo
-import io.github.dehuckakpyt.telegrambot.model.telegram.input.ContentInput
 import org.springframework.stereotype.Service
 import java.io.File
 
@@ -37,69 +36,62 @@ class MemeService(
         args: List<String>,
         subCommand: String?,
         chat: Chat,
-        sendMessage: suspend (String) -> Unit,
-        sendMediaGroup: suspend (List<InputMedia>) -> Unit,
-        input: (File) -> ContentInput
+        bot: TelegramBotActions
     ) {
         val subredditName = args.getOrNull(2)?.removePrefix(REDDIT_URL)
         when (subCommand) {
-            SubCommand.LIST.name.lowercase() -> handleListSubreddits(chat, sendMessage)
-            SubCommand.ADD.name.lowercase() -> handleAddSubreddit(chat, subredditName, sendMessage)
-            SubCommand.REMOVE.name.lowercase() -> handleRemoveSubreddit(chat, subredditName, sendMessage)
-            else -> handleDefaultCommand(chat, args, subCommand, sendMessage, sendMediaGroup, input)
+            SubCommand.LIST.name.lowercase() -> handleListSubreddits(chat, bot)
+            SubCommand.ADD.name.lowercase() -> handleAddSubreddit(chat, subredditName, bot)
+            SubCommand.REMOVE.name.lowercase() -> handleRemoveSubreddit(chat, subredditName, bot)
+            else -> handleDefaultCommand(chat, args, subCommand, bot)
         }
     }
 
-    private suspend fun handleListSubreddits(chat: Chat, sendMessage: suspend (String) -> Unit) {
+    private suspend fun handleListSubreddits(chat: Chat, bot: TelegramBotActions) {
         val subreddits = chat.subreddits
         if (subreddits.isEmpty()) {
-            sendMessage(EMPTY_SUBREDDIT_LIST)
+            bot.sendMessage(EMPTY_SUBREDDIT_LIST)
             return
         }
-        return sendMessage(printerUtil.printSubreddits(subreddits))
+        return bot.sendMessage(printerUtil.printSubreddits(subreddits))
     }
 
     private suspend fun handleAddSubreddit(
         chat: Chat,
-        subredditName: String?,
-        sendMessage: suspend (String) -> Unit
+        subredditName: String?, bot: TelegramBotActions
     ) {
         subredditName?.takeIf { isValidSubreddit(chat, it) }
             ?.takeIf { it.isNotBlank() }
             ?.let {
                 addSubreddit(chat, it)
-                sendMessage(SUBREDDIT_ADDED.format(it))
-            }
-            ?: sendMessage(PROVIDE_SUBREDDIT_NAME)
+                bot.sendMessage(SUBREDDIT_ADDED.format(it))
+            } ?: bot.sendMessage(PROVIDE_SUBREDDIT_NAME)
     }
 
     private suspend fun handleRemoveSubreddit(
         chat: Chat,
         subredditName: String?,
-        sendMessage: suspend (String) -> Unit
+        bot: TelegramBotActions
     ) {
         subredditName?.takeIf { it.isNotBlank() }
             ?.let {
                 removeSubreddit(chat, it)
-                sendMessage(SUBREDDIT_REMOVED.format(it))
+                bot.sendMessage(SUBREDDIT_REMOVED.format(it))
             }
-            ?: sendMessage(PROVIDE_SUBREDDIT_NAME)
+            ?: bot.sendMessage(PROVIDE_SUBREDDIT_NAME)
     }
 
     private suspend fun handleDefaultCommand(
         chat: Chat?,
         args: List<String>,
-        subredditName: String?,
-        sendMessage: suspend (String) -> Unit,
-        sendMediaGroup: suspend (List<InputMedia>) -> Unit,
-        input: (File) -> ContentInput
+        subredditName: String?, bot: TelegramBotActions
     ) {
         val subreddit = args.getOrNull(1)?.takeIf { it.isNotBlank() }
             ?: run {
                 chat?.subreddits?.randomOrNull()?.subredditName ?: subredditName
             }
         if (subreddit.isNullOrBlank()) {
-            sendMessage(NO_SUBREDDITS_FOUND)
+            bot.sendMessage(NO_SUBREDDITS_FOUND)
             return
         }
 
@@ -111,22 +103,22 @@ class MemeService(
             val url = post.url ?: return@mapNotNull null
 
             when {
-                url.endsWith(".mp4", true) -> InputMediaVideo(media = input(File(url)), caption = caption)
+                url.endsWith(".mp4", true) -> InputMediaVideo(media = bot.input(File(url)), caption = caption)
                 url.endsWith(".jpg", true) || url.endsWith(".jpeg", true) || url.endsWith(".png", true) ->
                     InputMediaPhoto(media = url, caption = caption)
 
                 else -> {
-                    sendMessage(UNSUPPORTED_MEDIA_TYPE.format(url))
+                    bot.sendMessage(UNSUPPORTED_MEDIA_TYPE.format(url))
                     null
                 }
             }
         }
 
         if (mediaGroup.isNotEmpty()) {
-            sendMediaGroup(mediaGroup)
+            bot.sendMediaGroup(mediaGroup)
             deleteTempFiles()
         } else {
-            sendMessage(NO_MEMES_FOUND)
+            bot.sendMessage(NO_MEMES_FOUND)
         }
     }
 

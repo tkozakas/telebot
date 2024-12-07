@@ -1,6 +1,7 @@
 package com.telebot.service
 
 import com.telebot.enums.SubCommand
+import com.telebot.handler.TelegramBotActions
 import com.telebot.model.Chat
 import com.telebot.model.Sentence
 import com.telebot.model.Stat
@@ -31,16 +32,16 @@ class DailyMessageService(
         username: String,
         subCommand: String?,
         year: Int,
-        sendMessage: suspend (String) -> Unit
+        bot: TelegramBotActions
     ) {
         if (subCommand.isNullOrBlank()) {
-            chooseRandomWinner(chat, sendMessage)
+            chooseRandomWinner(chat, bot)
             return
         }
 
         val stats = when (subCommand.lowercase()) {
             SubCommand.REGISTER.name.lowercase() -> {
-                register(chat, userId, username, sendMessage)
+                register(chat, userId, username, bot)
                 return
             }
             SubCommand.ALL.name.lowercase() -> {
@@ -57,24 +58,24 @@ class DailyMessageService(
         }
 
         val message = listStats(stats, year.toString())
-        sendMessage(message)
+        bot.sendMessage(message)
     }
 
     private suspend fun register(
         chat: Chat,
         userId: Long,
         username: String,
-        sendMessage: suspend (String) -> Unit
+        bot: TelegramBotActions
     ) {
         val userStats = chat.stats.find { it.userId == userId }
 
         if (userStats != null) {
-            sendMessage(dailyMessageTemplate.userAlreadyRegistered)
+            bot.sendMessage(dailyMessageTemplate.userAlreadyRegistered)
             return
         }
 
         registerUser(chat, userId, username)
-        sendMessage(dailyMessageTemplate.userRegistered.format(username))
+        bot.sendMessage(dailyMessageTemplate.userRegistered.format(username))
     }
 
     private suspend fun listStats(
@@ -112,17 +113,17 @@ class DailyMessageService(
 
     suspend fun chooseRandomWinner(
         chat: Chat,
-        sendMessage: suspend (String) -> Unit
+        bot: TelegramBotActions
     ) {
         val stats = chat.stats
         if (stats.isEmpty()) {
-            sendMessage(dailyMessageTemplate.noStats)
+            bot.sendMessage(dailyMessageTemplate.noStats)
             return
         }
 
         val currentWinner = stats.find { it.isWinner == true && it.year == CURRENT_YEAR }
         val winner = if (currentWinner != null) {
-            sendMessage(dailyMessageTemplate.winnerExists.format(currentWinner.username, currentWinner.score))
+            bot.sendMessage(dailyMessageTemplate.winnerExists.format(currentWinner.username, currentWinner.score))
             return
         } else {
             stats.randomOrNull()?.apply { isWinner = true }
@@ -135,7 +136,7 @@ class DailyMessageService(
                 delay(delayTime)
                 sentence.text?.format(dailyMessageTemplate.alias, winner?.username).let {
                     if (it != null) {
-                        sendMessage(it)
+                        bot.sendMessage(it)
                     }
                 }
             }

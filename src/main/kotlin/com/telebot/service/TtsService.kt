@@ -2,8 +2,8 @@ package com.telebot.service
 
 import com.telebot.client.TtsClient
 import com.telebot.dto.TtsRequestDTO
+import com.telebot.handler.TelegramBotActions
 import com.telebot.properties.TtsProperties
-import io.github.dehuckakpyt.telegrambot.model.telegram.input.ContentInput
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.springframework.stereotype.Service
@@ -22,19 +22,15 @@ class TtsService(
 
     suspend fun handleTtsCommand(
         messageText: String,
-        sendAudio: suspend (ContentInput, String) -> Unit,
-        sendMessage: suspend (String) -> Unit,
-        input: (File) -> ContentInput
+        bot: TelegramBotActions
     ) {
         withContext(Dispatchers.IO) {
             val tempFile = getAudio(messageText)
             if (tempFile == null) {
-                sendMessage(NO_RESPONSE)
+                bot.sendMessage(NO_RESPONSE)
                 return@withContext
             }
-
-            val contentInput = input(tempFile)
-            sendAudio(contentInput, messageText)
+            bot.sendAudio(tempFile, messageText)
         }
     }
 

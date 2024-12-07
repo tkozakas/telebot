@@ -24,7 +24,7 @@ class DailyMessageService(
 
     companion object {
         private val CURRENT_YEAR = Year.now().value
-        private val RANDOM_DELAY_RANGE = 500L..1000L
+        private val RANDOM_DELAY_RANGE = 700L..1200L
     }
 
     override suspend fun handle(chat: Chat, update: UpdateContext) {

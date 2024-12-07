@@ -104,9 +104,9 @@ class MemeService(
         }
 
         val count = args.getOrNull(2)?.toIntOrNull() ?: 1
-        val redditPosts = subreddit?.let { getRedditMemes(it, count) }
+        val redditPosts = getRedditMemes(subreddit, count)
 
-        val mediaGroup = redditPosts?.mapNotNull { post ->
+        val mediaGroup = redditPosts.mapNotNull { post ->
             val caption = "r/$subreddit\n${post.title} by ${post.author}"
             val url = post.url ?: return@mapNotNull null
 
@@ -122,13 +122,11 @@ class MemeService(
             }
         }
 
-        if (mediaGroup != null) {
-            if (mediaGroup.isNotEmpty()) {
-                sendMediaGroup(mediaGroup)
-                deleteTempFiles()
-            } else {
-                sendMessage(NO_MEMES_FOUND)
-            }
+        if (mediaGroup.isNotEmpty()) {
+            sendMediaGroup(mediaGroup)
+            deleteTempFiles()
+        } else {
+            sendMessage(NO_MEMES_FOUND)
         }
     }
 

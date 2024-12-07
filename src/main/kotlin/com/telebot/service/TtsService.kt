@@ -23,7 +23,7 @@ class TtsService(
 
     override suspend fun handle(chat: Chat, update: UpdateContext) {
         val bot = update.bot
-        val messageText = update.args.joinToString(" ")
+        val messageText = update.args.drop(1).joinToString(" ")
         withContext(Dispatchers.IO) {
             val tempFile = getAudio(messageText)
             if (tempFile == null) {

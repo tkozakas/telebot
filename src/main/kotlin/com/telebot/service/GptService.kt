@@ -39,15 +39,22 @@ class GptService(
 
             else -> update.args.joinToString(" ")
                 .takeIf { it.isNotBlank() }
-                ?.let { prompt -> processPrompt(chatId, update.username, prompt, true)?.let { bot.sendMessage(it, parseMode = "Markdown") } }
+                ?.let { prompt ->
+                    processPrompt(chatId, prompt, true)?.let {
+                        bot.sendMessage(
+                            it,
+                            parseMode = "Markdown"
+                        )
+                    }
+                }
                 ?: bot.sendMessage(
                     if (update.args.size <= 1) INVALID_PROMPT else NO_RESPONSE
                 )
         }
     }
 
-    fun processPrompt(chatId: Long, username: String, prompt: String, useMemory: Boolean): String? {
-        val userMessage = GptRequestDTO.Message(role = "user", content = "$username: $prompt")
+    fun processPrompt(chatId: Long, prompt: String, useMemory: Boolean): String? {
+        val userMessage = GptRequestDTO.Message(role = "user", prompt)
         useMemory.let { gptMessageStorageService.addMessage(chatId, userMessage) }
         val messages = gptMessageStorageService.getMessages(chatId)
         val gptRequest = GptRequestDTO(messages = messages, gptProperties = gptProperties)

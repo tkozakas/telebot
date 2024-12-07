@@ -53,7 +53,7 @@ class MemeService(
             bot.sendMessage(EMPTY_SUBREDDIT_LIST)
             return
         }
-        return bot.sendMessage(printerUtil.printSubreddits(subreddits))
+        return bot.sendMessage(printerUtil.printSubreddits(subreddits), parseMode = "Markdown")
     }
 
     private suspend fun handleAddSubreddit(
@@ -101,9 +101,9 @@ class MemeService(
         val mediaGroup = redditPosts.mapNotNull { post ->
             val caption = "r/$subreddit\n${post.title} by ${post.author}"
             val url = post.url ?: return@mapNotNull null
-
+            val media = bot.input?.let { it(File(url)) }
             when {
-                url.endsWith(".mp4", true) -> InputMediaVideo(media = bot.input(File(url)), caption = caption)
+                url.endsWith(".mp4", true) -> media?.let { InputMediaVideo(media = it, caption = caption) }
                 url.endsWith(".jpg", true) || url.endsWith(".jpeg", true) || url.endsWith(".png", true) ->
                     InputMediaPhoto(media = url, caption = caption)
 

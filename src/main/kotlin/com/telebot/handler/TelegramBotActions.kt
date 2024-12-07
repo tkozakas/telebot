@@ -13,13 +13,17 @@ class TelegramBotActions(
 ) : BotActions {
 
     override suspend fun sendAudio(audio: File, caption: String?) {
-        val audioInput = input(audio)
-        bot.sendAudio(chatId = chatId, audio = audioInput, caption = caption)
+        val audioInput = input?.let { it(audio) }
+        if (audioInput != null) {
+            bot.sendAudio(chatId = chatId, audio = audioInput, caption = caption)
+        }
     }
 
     override suspend fun sendDocument(file: File) {
-        val documentInput = input(file)
-        bot.sendDocument(chatId = chatId, document = documentInput)
+        val documentInput = input?.let { it(file) }
+        if (documentInput != null) {
+            bot.sendDocument(chatId = chatId, document = documentInput)
+        }
     }
 
     override suspend fun sendMediaGroup(media: List<InputMedia>) {

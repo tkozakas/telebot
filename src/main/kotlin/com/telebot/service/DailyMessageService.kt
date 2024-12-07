@@ -58,7 +58,7 @@ class DailyMessageService(
         }
 
         val message = listStats(stats, year.toString())
-        bot.sendMessage(message)
+        bot.sendMessage(message, parseMode = "Markdown")
     }
 
     private suspend fun register(
@@ -123,7 +123,7 @@ class DailyMessageService(
 
         val currentWinner = stats.find { it.isWinner == true && it.year == CURRENT_YEAR }
         val winner = if (currentWinner != null) {
-            bot.sendMessage(dailyMessageTemplate.winnerExists.format(currentWinner.username, currentWinner.score))
+            bot.sendMessage(dailyMessageTemplate.winnerExists.format(currentWinner.username, currentWinner.score), parseMode = "Markdown")
             return
         } else {
             stats.randomOrNull()?.apply { isWinner = true }
@@ -136,7 +136,7 @@ class DailyMessageService(
                 delay(delayTime)
                 sentence.text?.format(dailyMessageTemplate.alias, winner?.username).let {
                     if (it != null) {
-                        bot.sendMessage(it)
+                        bot.sendMessage(it, parseMode = "Markdown")
                     }
                 }
             }

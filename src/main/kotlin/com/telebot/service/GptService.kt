@@ -44,7 +44,7 @@ class GptService(
 
             else -> args.drop(1).joinToString(" ")
                 .takeIf { it.isNotBlank() }
-                ?.let { prompt -> processPrompt(chatId, username, prompt, true)?.let { bot.sendMessage(it) } }
+                ?.let { prompt -> processPrompt(chatId, username, prompt, true)?.let { bot.sendMessage(it, parseMode = "Markdown") } }
                 ?: bot.sendMessage(
                     if (args.size <= 1) INVALID_PROMPT else NO_RESPONSE
                 )

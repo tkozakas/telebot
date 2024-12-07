@@ -46,7 +46,7 @@ class StickerService(
         }
 
         val stickerList = printerUtil.printStickers(stickers)
-        bot.sendMessage(stickerList)
+        bot.sendMessage(stickerList, parseMode = "Markdown")
     }
 
     private suspend fun handleAddSticker(chat: Chat, args: List<String>, bot: TelegramBotActions) {

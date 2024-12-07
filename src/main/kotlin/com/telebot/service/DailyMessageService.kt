@@ -54,7 +54,7 @@ class DailyMessageService(
             }
         }
 
-        val message = listStats(stats, year.toString())
+        val message = listStats(stats, year.toString(), update.subCommand)
         bot.sendMessage(message, parseMode = "Markdown")
     }
 
@@ -77,12 +77,13 @@ class DailyMessageService(
 
     private suspend fun listStats(
         stats: Map<Long, Stat>,
-        year: String
+        year: String,
+        subCommand: String?
     ): String {
         if (stats.isEmpty()) {
             return dailyMessageTemplate.noStats
         }
-        val header = if (year == SubCommand.ALL.name) {
+        val header = if (subCommand == SubCommand.ALL.name.lowercase()) {
             dailyMessageTemplate.statsHeaderAll.format(year)
         } else {
             dailyMessageTemplate.statsHeader.format(year)

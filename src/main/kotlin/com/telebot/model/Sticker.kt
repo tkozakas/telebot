@@ -6,6 +6,7 @@ import java.util.*
 @Entity
 @Table(name = "stickers")
 open class Sticker(
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "sticker_id", nullable = false)
@@ -23,4 +24,5 @@ open class Sticker(
 
     @Column(name = "sticker_set_name")
     open var stickerSetName: String? = null
+
 )

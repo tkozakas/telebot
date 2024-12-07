@@ -5,6 +5,7 @@ import jakarta.persistence.*
 @Entity
 @Table(name = "stats")
 open class Stat(
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "stats_id", nullable = false)
@@ -28,4 +29,5 @@ open class Stat(
 
     @Column(name = "year")
     open var year: Int? = null,
+
 )

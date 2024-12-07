@@ -5,6 +5,7 @@ import jakarta.persistence.*
 @Entity
 @Table(name = "facts")
 open class Fact(
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "fact_id", nullable = false)
@@ -16,4 +17,5 @@ open class Fact(
 
     @Column(name = "comment", length = 3500)
     open var comment: String? = null
+
 )

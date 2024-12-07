@@ -7,6 +7,7 @@ import io.github.dehuckakpyt.telegrambot.model.telegram.input.ContentInput
 import java.io.File
 
 class UpdateContext(message: Message, telegramBot: TelegramBot, input: ((File) -> ContentInput)?) {
+
     val chatName: String? = message.chat.title
     val chatId: Long = message.chat.id
     val userId: Long = message.from?.id ?: 0

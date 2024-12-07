@@ -6,6 +6,7 @@ import java.util.*
 @Entity
 @Table(name = "subreddits")
 open class Subreddit(
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "subreddit_id", nullable = false)
@@ -17,4 +18,5 @@ open class Subreddit(
 
     @Column(name = "subreddit_name", nullable = false)
     open var subredditName: String? = null
+
 )

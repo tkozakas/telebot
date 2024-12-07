@@ -5,6 +5,7 @@ import jakarta.persistence.*
 @Entity
 @Table(name = "chat")
 open class Chat(
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "chat_id", nullable = false)
@@ -27,4 +28,5 @@ open class Chat(
 
     @OneToMany(mappedBy = "chat", cascade = [CascadeType.ALL], fetch = FetchType.EAGER, orphanRemoval = true)
     open var subreddits: MutableSet<Subreddit> = mutableSetOf(),
+
 )

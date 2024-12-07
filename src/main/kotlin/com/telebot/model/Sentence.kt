@@ -19,4 +19,5 @@ open class Sentence {
 
     @Column(name = "text", length = 1000)
     open var text: String? = null
+
 }

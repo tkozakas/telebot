@@ -6,27 +6,24 @@ import org.springframework.stereotype.Service
 
 @Service
 class GptMessageStorageService {
+
     @Value("\${gpt.initial-prompt}")
-    private val initialPrompt: String? = null
+    private lateinit var initialPrompt: String
 
     private val messageStore = mutableMapOf<Long, MutableList<GptRequestDTO.Message>>()
 
     fun addMessage(chatId: Long, message: GptRequestDTO.Message) {
         val messages = messageStore.computeIfAbsent(chatId) { mutableListOf() }
-        when {
-            messages.isEmpty() && !initialPrompt.isNullOrBlank() -> {
-                messages.add(GptRequestDTO.Message(role = "system", content = initialPrompt))
-            }
+        if (messages.isEmpty() && initialPrompt.isNotBlank()) {
+            messages.add(GptRequestDTO.Message(role = "system", content = initialPrompt))
         }
         messages.add(message)
     }
 
-    fun getMessages(chatId: Long): List<GptRequestDTO.Message> {
-        return messageStore[chatId] ?: emptyList()
-    }
+    fun getMessages(chatId: Long): List<GptRequestDTO.Message> =
+        messageStore[chatId]?.toList() ?: emptyList()
 
     fun clearMessages(chatId: Long) {
         messageStore.remove(chatId)
     }
 }
-

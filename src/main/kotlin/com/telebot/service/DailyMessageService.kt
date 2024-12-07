@@ -7,7 +7,6 @@ import com.telebot.model.Sentence
 import com.telebot.model.Stat
 import com.telebot.model.UpdateContext
 import com.telebot.properties.DailyMessageTemplate
-import com.telebot.repository.ChatRepository
 import com.telebot.repository.SentenceRepository
 import com.telebot.util.PrinterUtil
 import kotlinx.coroutines.delay
@@ -17,102 +16,102 @@ import java.time.Year
 
 @Service
 class DailyMessageService(
-    private val chatRepository: ChatRepository,
     private val sentenceRepository: SentenceRepository,
     private val dailyMessageTemplate: DailyMessageTemplate,
-    private val printerUtil: PrinterUtil
+    private val printerUtil: PrinterUtil,
+    private val chatService: ChatService
 ) : CommandService {
-    companion object Constants {
-        var CURRENT_YEAR = Year.now().value
-        val randomDelayRange = 500L..1000L
+
+    companion object {
+        private val CURRENT_YEAR = Year.now().value
+        private val RANDOM_DELAY_RANGE = 500L..1000L
     }
 
     override suspend fun handle(chat: Chat, update: UpdateContext) {
         val bot = update.bot
         val year = update.args.getOrNull(2)?.toIntOrNull() ?: CURRENT_YEAR
-
-        if (update.subCommand.isNullOrBlank()) {
-            chooseRandomWinner(chat, bot)
-            return
+        when (update.subCommand?.lowercase()) {
+            null -> chooseRandomWinner(chat, bot)
+            SubCommand.REGISTER.name.lowercase() -> registerUser(chat, update.userId, update.username, bot)
+            SubCommand.ALL.name.lowercase() -> showAllStats(chat, year, bot)
+            SubCommand.STATS.name.lowercase() -> showStatsForYear(chat, year, bot)
+            else -> showCurrentStats(chat, bot)
         }
-
-        val stats = when (update.subCommand.lowercase()) {
-            SubCommand.REGISTER.name.lowercase() -> {
-                register(chat, update.userId, update.username, bot)
-                return
-            }
-            SubCommand.ALL.name.lowercase() -> {
-                aggregateStats(chat.stats)
-            }
-            SubCommand.STATS.name.lowercase() -> {
-                val stats = chat.stats.filter { it.year == year }
-                aggregateStats(stats)
-            }
-            else -> {
-                val stats = chat.stats.filter { it.year == CURRENT_YEAR }
-                aggregateStats(stats)
-            }
-        }
-
-        val message = listStats(stats, year.toString(), update.subCommand)
-        bot.sendMessage(message, parseMode = "Markdown")
     }
 
-    private suspend fun register(
-        chat: Chat,
-        userId: Long,
-        username: String,
-        bot: TelegramBotActions
-    ) {
-        val userStats = chat.stats.find { it.userId == userId }
-
-        if (userStats != null) {
+    private suspend fun registerUser(chat: Chat, userId: Long, username: String, bot: TelegramBotActions) {
+        if (chat.stats.any { it.userId == userId }) {
             bot.sendMessage(dailyMessageTemplate.userAlreadyRegistered)
             return
         }
-
-        registerUser(chat, userId, username)
+        saveUser(chat, userId, username)
         bot.sendMessage(dailyMessageTemplate.userRegistered.format(username))
     }
 
-    private suspend fun listStats(
+    private fun saveUser(chat: Chat, userId: Long, username: String) {
+        chat.stats.add(
+            Stat(
+                chat = chat,
+                userId = userId,
+                username = username,
+                year = CURRENT_YEAR,
+                score = 0,
+                isWinner = false
+            )
+        )
+        chatService.save(chat)
+    }
+
+    private suspend fun showAllStats(chat: Chat, year: Int, bot: TelegramBotActions) {
+        val stats = aggregateStats(chat.stats)
+        sendStatsMessage(stats, year, bot, dailyMessageTemplate.statsHeaderAll)
+    }
+
+    private suspend fun showStatsForYear(chat: Chat, year: Int, bot: TelegramBotActions) {
+        val stats = aggregateStats(chat.stats.filter { it.year == year })
+        sendStatsMessage(stats, year, bot, dailyMessageTemplate.statsHeader)
+    }
+
+    private suspend fun showCurrentStats(chat: Chat, bot: TelegramBotActions) {
+        val stats = aggregateStats(chat.stats.filter { it.year == CURRENT_YEAR })
+        sendStatsMessage(stats, CURRENT_YEAR, bot, dailyMessageTemplate.statsHeader)
+    }
+
+    private suspend fun sendStatsMessage(
         stats: Map<Long, Stat>,
-        year: String,
-        subCommand: String?
-    ): String {
+        year: Int,
+        bot: TelegramBotActions,
+        headerTemplate: String
+    ) {
         if (stats.isEmpty()) {
-            return dailyMessageTemplate.noStats
+            bot.sendMessage(dailyMessageTemplate.noStats)
+            return
         }
-        val header = if (subCommand == SubCommand.ALL.name.lowercase()) {
-            dailyMessageTemplate.statsHeaderAll.format(year)
-        } else {
-            dailyMessageTemplate.statsHeader.format(year)
-        }
-        val footer = dailyMessageTemplate.statsFooter.format(stats.size)
-        val body = dailyMessageTemplate.userStats
-        return printerUtil.printStats(header, stats, year, footer, body)
+        val message = printerUtil.printStats(
+            header = headerTemplate.format(year),
+            stats = stats,
+            year = year.toString(),
+            footer = dailyMessageTemplate.statsFooter.format(stats.size),
+            bodyTemplate = dailyMessageTemplate.userStats
+        )
+        bot.sendMessage(message, parseMode = "Markdown")
     }
 
     private fun aggregateStats(stats: Collection<Stat>): Map<Long, Stat> {
-        return stats.groupBy { it.userId }
-            .filterKeys { it != null }
-            .mapValues { (_, userStats) ->
-                val totalScore = userStats.sumOf { it.score ?: 0L }
-                Stat().apply {
-                    this.username = userStats.firstOrNull()?.username
-                    this.userId = userStats.firstOrNull()?.userId
-                    this.chat = userStats.firstOrNull()?.chat
-                    this.score = totalScore
-                    this.year = userStats.firstOrNull()?.year
-                    this.isWinner = userStats.any { it.isWinner == true }
-                }
-            }.mapKeys { it.key!! }
+        return stats.groupBy { it.userId }.mapNotNull { (userId, userStats) ->
+            userId?.let {
+                it to Stat(
+                    userId = it,
+                    username = userStats.firstOrNull()?.username,
+                    chat = userStats.firstOrNull()?.chat,
+                    score = userStats.sumOf { stat -> stat.score ?: 0L },
+                    year = userStats.firstOrNull()?.year
+                )
+            }
+        }.toMap()
     }
 
-    suspend fun chooseRandomWinner(
-        chat: Chat,
-        bot: TelegramBotActions
-    ) {
+    suspend fun chooseRandomWinner(chat: Chat, bot: TelegramBotActions) {
         val stats = chat.stats
         if (stats.isEmpty()) {
             bot.sendMessage(dailyMessageTemplate.noStats)
@@ -120,34 +119,37 @@ class DailyMessageService(
         }
 
         val currentWinner = stats.find { it.isWinner == true && it.year == CURRENT_YEAR }
-        val sentences = getRandomGroupSentences().sortedBy { it.orderNumber }
-        val winner = currentWinner ?: stats.randomOrNull()?.apply { isWinner = true }
-        if (currentWinner != null || sentences.isEmpty()) {
-            if (currentWinner != null) {
-                bot.sendMessage(dailyMessageTemplate.winnerExists.format(currentWinner.username, currentWinner.score), parseMode = "Markdown")
-            }
+        if (currentWinner != null) {
+            bot.sendMessage(
+                dailyMessageTemplate.winnerExists.format(currentWinner.username, currentWinner.score),
+                parseMode = "Markdown"
+            )
             return
         }
 
+        val sentences = getRandomGroupSentences()
+        val winner = stats.randomOrNull()?.apply { isWinner = true } ?: return
+        sendWinnerMessages(sentences, winner, bot)
+        updateWinner(chat, winner)
+    }
+
+    private suspend fun sendWinnerMessages(sentences: List<Sentence>, winner: Stat, bot: TelegramBotActions) {
         runBlocking {
-            sentences.forEachIndexed { _, sentence ->
-                val delayTime = randomDelayRange.random()
-                delay(delayTime)
-                sentence.text?.format(dailyMessageTemplate.alias, winner?.username).let {
-                    if (it != null) {
-                        bot.sendMessage(it, parseMode = "Markdown")
-                    }
+            sentences.sortedBy { it.orderNumber }.forEach { sentence ->
+                delay(RANDOM_DELAY_RANGE.random())
+                sentence.text?.format(dailyMessageTemplate.alias, winner.username)?.let {
+                    bot.sendMessage(it, parseMode = "Markdown")
                 }
             }
         }
-        setWinner(chat, winner)
     }
 
-    private fun setWinner(chat: Chat, winner: Stat?) {
-        chat.stats.find { it.userId == winner?.userId }?.let {
-            it.score = it.score?.plus(1)
-            it.isWinner = true
+    private fun updateWinner(chat: Chat, winner: Stat) {
+        chat.stats.find { it.userId == winner.userId }?.apply {
+            this.score = this.score?.plus(1)
+            this.isWinner = true
         }
+        chatService.save(chat)
     }
 
     fun getRandomGroupSentences(): List<Sentence> {
@@ -155,22 +157,9 @@ class DailyMessageService(
         return sentenceRepository.findSentencesByGroupId(groupId)
     }
 
-    private fun registerUser(chat: Chat, userId: Long, username: String) {
-        chat.stats.add(Stat().apply {
-            this.chat = chat
-            this.userId = userId
-            this.username = username
-            this.year = CURRENT_YEAR
-            this.score = 0
-            this.isWinner = false
-        })
-        chatRepository.save(chat)
-    }
-
-    fun resetWinner() {
-        val chats = chatRepository.findAll().firstOrNull()
-        chats?.stats?.forEach {
-            it.isWinner = false
+    fun resetWinners() {
+        chatService.findAll().forEach { chat ->
+            chat.stats.forEach { it.isWinner = false }
         }
     }
 }

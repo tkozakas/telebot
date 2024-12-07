@@ -5,16 +5,16 @@ import java.util.*
 
 @Entity
 @Table(name = "subreddits")
-open class Subreddit {
+open class Subreddit(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "subreddit_id", nullable = false)
-    open var id: UUID? = null
+    open var id: UUID? = null,
 
     @ManyToOne
     @JoinColumn(name = "chat_id")
-    open var chat: Chat? = null
+    open var chat: Chat? = null,
 
     @Column(name = "subreddit_name", nullable = false)
     open var subredditName: String? = null
-}
+)

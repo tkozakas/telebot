@@ -16,25 +16,27 @@ class TtsService(
     private val ttsProperties: TtsProperties,
     private val ttsClient: TtsClient
 ) : CommandService {
-    companion object Constants {
-        const val NO_RESPONSE = "TTS did not provide a response. Please try again."
-        const val DEFAULT_TITLE = "audio"
+
+    companion object {
+        private const val NO_RESPONSE_MESSAGE = "TTS did not provide a response. Please try again."
+        private const val TEMP_FILE_PREFIX = "audio"
+        private const val TEMP_FILE_EXTENSION = ".mp3"
     }
 
     override suspend fun handle(chat: Chat, update: UpdateContext) {
-        val bot = update.bot
         val messageText = update.args.drop(1).joinToString(" ")
+        val tempAudioFile = generateAudioFile(messageText)
+
         withContext(Dispatchers.IO) {
-            val tempFile = getAudio(messageText)
-            if (tempFile == null) {
-                bot.sendMessage(NO_RESPONSE)
-                return@withContext
+            if (tempAudioFile == null) {
+                update.bot.sendMessage(NO_RESPONSE_MESSAGE)
+            } else {
+                update.bot.sendAudio(tempAudioFile, messageText)
             }
-            bot.sendAudio(tempFile, messageText)
         }
     }
 
-    private fun getRequest(messageText: String): TtsRequestDTO {
+    fun generateAudioFile(messageText: String): File? {
         val request = TtsRequestDTO(
             text = messageText,
             modelId = ttsProperties.modelId,
@@ -45,30 +47,21 @@ class TtsService(
                 "use_speaker_boost" to ttsProperties.useSpeakerBoost
             )
         )
-        return request
-    }
 
-    fun getAudio(messageText: String): File? {
-        val request = getRequest(messageText)
-        var audio: ByteArray?
-
-        for (i in ttsProperties.token.indices) {
-            try {
-                audio = ttsClient.generateSpeech(
-                    apiKey = ttsProperties.token[i],
-                    voiceId = ttsProperties.voiceId,
-                    request = request
-                )
+        for (apiKey in ttsProperties.token) {
+            val audioBytes = try {
+                ttsClient.generateSpeech(apiKey, ttsProperties.voiceId, request)
             } catch (e: Exception) {
-                continue
+                null
             }
-            if (audio != null) {
-                val tempFile = File.createTempFile(DEFAULT_TITLE, ".mp3")
-                Files.write(tempFile.toPath(), audio)
-                return tempFile
+
+            if (audioBytes != null) {
+                return File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_EXTENSION).apply {
+                    Files.write(toPath(), audioBytes)
+                }
             }
         }
+
         return null
     }
-
 }

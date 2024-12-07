@@ -16,37 +16,32 @@ class StickerService(
     private val chatRepository: ChatRepository,
     private val printerUtil: PrinterUtil
 ) : CommandService {
-    companion object Constants {
-        const val TELEGRAM_STICKER_URL = "https://t.me/addstickers/"
-        const val STICKER_SET_ALREADY_EXISTS = "Sticker set %s already exists"
-        const val NO_STICKERS_FOUND = "No stickers found"
-        const val INVALID_STICKER_NAME = "Invalid sticker name"
-        const val STICKER_ADDED = "Sticker %s added"
-        const val STICKER_REMOVED = "Sticker %s removed"
+
+    companion object {
+        private const val TELEGRAM_STICKER_URL = "https://t.me/addstickers/"
+        private const val STICKER_SET_ALREADY_EXISTS = "Sticker set %s already exists"
+        private const val NO_STICKERS_FOUND = "No stickers found"
+        private const val INVALID_STICKER_NAME = "Invalid sticker name"
+        private const val STICKER_ADDED = "Sticker %s added"
+        private const val STICKER_REMOVED = "Sticker %s removed"
     }
 
     override suspend fun handle(chat: Chat, update: UpdateContext) {
-        val bot = update.bot
         when (update.subCommand) {
-            SubCommand.LIST.name.lowercase() -> handleListStickers(bot)
-            SubCommand.ADD.name.lowercase() -> handleAddSticker(chat, update.args, bot)
-            SubCommand.REMOVE.name.lowercase() -> handleRemoveSticker(chat, update.args, bot)
-            else -> handleDefaultCommand(chat, bot)
+            SubCommand.LIST.name.lowercase() -> listStickers(update.bot)
+            SubCommand.ADD.name.lowercase() -> addSticker(chat, update.args, update.bot)
+            SubCommand.REMOVE.name.lowercase() -> removeSticker(chat, update.args, update.bot)
+            else -> sendRandomSticker(chat, update.bot)
         }
     }
 
-    private suspend fun handleListStickers(bot: TelegramBotActions) {
+    private suspend fun listStickers(bot: TelegramBotActions) {
         val stickers = chatRepository.findAll().flatMap { it.stickers }
-        if (stickers.isEmpty()) {
-            bot.sendMessage(NO_STICKERS_FOUND)
-            return
-        }
-
-        val stickerList = printerUtil.printStickers(stickers)
-        bot.sendMessage(stickerList, parseMode = "Markdown")
+        val message = if (stickers.isEmpty()) NO_STICKERS_FOUND else printerUtil.printStickers(stickers)
+        bot.sendMessage(message, parseMode = if (stickers.isNotEmpty()) "Markdown" else null)
     }
 
-    private suspend fun handleAddSticker(chat: Chat, args: List<String>, bot: TelegramBotActions) {
+    private suspend fun addSticker(chat: Chat, args: List<String>, bot: TelegramBotActions) {
         val stickerName = args.getOrNull(2)?.removePrefix(TELEGRAM_STICKER_URL)
         if (stickerName.isNullOrBlank()) {
             bot.sendMessage(INVALID_STICKER_NAME)
@@ -56,49 +51,36 @@ class StickerService(
             bot.sendMessage(STICKER_SET_ALREADY_EXISTS.format(stickerName))
             return
         }
-        val telegramStickers = bot.getStickerSet(stickerName).stickers
-        val stickers = telegramStickers.map { sticker ->
-            Sticker().apply {
-                this.fileId = sticker.fileId
-                this.emoji = sticker.emoji
-                this.stickerSetName = stickerName
-                this.chat = chat
-            }
+        val stickers = bot.getStickerSet(stickerName).stickers.map {
+            Sticker(fileId = it.fileId, stickerSetName = stickerName, emoji = it.emoji, chat = chat)
         }
         chat.stickers.addAll(stickers)
-        withContext(Dispatchers.IO) {
-            chatRepository.save(chat)
-        }
+        withContext(Dispatchers.IO) { chatRepository.save(chat) }
         bot.sendMessage(STICKER_ADDED.format(stickerName))
     }
 
-    suspend fun handleRemoveSticker(chat: Chat, args: List<String>, bot: TelegramBotActions) {
+    private suspend fun removeSticker(chat: Chat, args: List<String>, bot: TelegramBotActions) {
         val stickerName = args.getOrNull(2)
         if (stickerName.isNullOrBlank()) {
             bot.sendMessage(INVALID_STICKER_NAME)
             return
         }
-        val stickers = chat.stickers.filter { it.stickerSetName == stickerName }.toSet()
+        val stickers = chat.stickers.filter { it.stickerSetName == stickerName }
         if (stickers.isEmpty()) {
             bot.sendMessage(NO_STICKERS_FOUND)
             return
         }
-        chat.stickers.removeAll(stickers)
-        withContext(Dispatchers.IO) {
-            chatRepository.save(chat)
-        }
+        chat.stickers.removeAll(stickers.toSet())
+        withContext(Dispatchers.IO) { chatRepository.save(chat) }
         bot.sendMessage(STICKER_REMOVED.format(stickerName))
     }
 
-    suspend fun handleDefaultCommand(
-        chat: Chat,
-        bot: TelegramBotActions
-    ) {
+    private suspend fun sendRandomSticker(chat: Chat, bot: TelegramBotActions) {
         val sticker = chat.stickers.randomOrNull()
         if (sticker == null) {
             bot.sendMessage(NO_STICKERS_FOUND)
-            return
+        } else {
+            sticker.fileId?.let { bot.sendSticker(it) }
         }
-        sticker.fileId?.let { bot.sendSticker(it) }
     }
 }

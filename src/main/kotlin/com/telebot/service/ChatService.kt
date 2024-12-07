@@ -8,14 +8,16 @@ import org.springframework.stereotype.Service
 @Service
 class ChatService(
     private val chatRepository: ChatRepository,
-    @Value("\${telegram-bot.username}") private val botUsername: String,
+    @Value("\${telegram-bot.username}") private val botUsername: String
 ) {
+
     fun saveChat(chatId: Long, chatName: String?): Chat {
-        val chat = chatRepository.findByTelegramChatId(chatId) ?: Chat().apply {
-            telegramChatId = chatId
-        }
-        chat.chatName = chatName?.takeIf { it.isNotBlank() } ?: botUsername
+        val chat = chatRepository.findByTelegramChatId(chatId) ?: Chat(telegramChatId = chatId)
+        chat.chatName = chatName?.takeIf(String::isNotBlank) ?: botUsername
         return chatRepository.save(chat)
     }
-}
 
+    fun save(chat: Chat) = chatRepository.save(chat)
+
+    fun findAll(): List<Chat> = chatRepository.findAll()
+}

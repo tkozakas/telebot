@@ -1,7 +1,6 @@
 package com.telebot.handler
 
 import io.github.dehuckakpyt.telegrambot.TelegramBot
-import io.github.dehuckakpyt.telegrambot.model.telegram.InputMedia
 import io.github.dehuckakpyt.telegrambot.model.telegram.StickerSet
 import io.github.dehuckakpyt.telegrambot.model.telegram.input.ContentInput
 import java.io.File
@@ -26,7 +25,7 @@ class TelegramBotActions(
         }
     }
 
-    override suspend fun sendMediaGroup(media: List<InputMedia>) {
+    override suspend fun sendMediaGroup(media: List<Any>) {
         bot.sendMediaGroup(chatId = chatId, media = media)
     }
 

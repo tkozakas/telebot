@@ -41,6 +41,6 @@ class ScheduleHandler(
 
     @Scheduled(cron = "\${schedule.winner-reset}")
     fun resetWinner() {
-        dailyMessageService.resetWinner()
+        dailyMessageService.resetWinners()
     }
 }

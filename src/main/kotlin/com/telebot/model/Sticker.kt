@@ -5,22 +5,22 @@ import java.util.*
 
 @Entity
 @Table(name = "stickers")
-open class Sticker {
+open class Sticker(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "sticker_id", nullable = false)
-    open var id: UUID? = null
+    open var id: UUID? = null,
 
     @ManyToOne
     @JoinColumn(name = "chat_id")
-    open var chat: Chat? = null
+    open var chat: Chat? = null,
 
     @Column(name = "file_id")
-    open var fileId: String? = null
+    open var fileId: String? = null,
 
     @Column(name = "emoji")
-    open var emoji: String? = null
+    open var emoji: String? = null,
 
     @Column(name = "sticker_set_name")
     open var stickerSetName: String? = null
-}
+)

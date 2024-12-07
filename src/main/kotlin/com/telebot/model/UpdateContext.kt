@@ -10,7 +10,7 @@ class UpdateContext(message: Message, telegramBot: TelegramBot, input: ((File) -
     val chatName: String? = message.chat.title
     val chatId: Long = message.chat.id
     val userId: Long = message.from?.id ?: 0
-    val username: String = message.from?.username ?: "User"
+    val username: String = message.from?.firstName ?: "User"
     val args: List<String> = message.text?.split(" ") ?: emptyList()
     val subCommand = args.getOrNull(1)?.lowercase()
     val bot = TelegramBotActions(chatId = chatId, bot = telegramBot, input = input)

@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.io.File
 import java.io.IOException
+import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -28,15 +29,21 @@ class MediaUtil {
         ensureOutputDirExists()
         val file = File(outputDir, fileName)
         try {
-            URL(url).openStream().use { input ->
+            val connection = URL(url).openConnection() as HttpURLConnection
+            connection.connectTimeout = 10_000
+            connection.readTimeout = 10_000
+            connection.inputStream.use { input ->
                 file.outputStream().buffered().use { output ->
                     input.copyTo(output)
                 }
             }
-            if (!file.exists()) throw IOException("Failed to download file: $url")
+            if (!file.exists()) {
+                throw IOException("Failed to download file: $url")
+            }
             return file
         } catch (e: Exception) {
-            throw IOException("Error downloading file from $url: ${e.message}", e)
+            println("Error downloading file: ${e.message}")
+            throw e
         }
     }
 

@@ -98,7 +98,7 @@ class MemeService(
             ?: run {
                 chat?.subreddits?.randomOrNull()?.subredditName ?: subredditName
             }
-        if (subreddit != null && subreddit.isBlank()) {
+        if (subreddit.isNullOrBlank()) {
             sendMessage(NO_SUBREDDITS_FOUND)
             return
         }

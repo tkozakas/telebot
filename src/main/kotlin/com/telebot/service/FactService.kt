@@ -1,50 +1,33 @@
 package com.telebot.service
 
 import com.telebot.enums.SubCommand
+import com.telebot.handler.TelegramBotActions
 import com.telebot.model.Chat
 import com.telebot.model.Fact
+import com.telebot.model.UpdateContext
 import com.telebot.repository.ChatRepository
-import io.github.dehuckakpyt.telegrambot.model.telegram.input.ContentInput
 import org.springframework.stereotype.Service
-import java.io.File
 
 @Service
 class FactService(
     private val chatRepository: ChatRepository,
     private val ttsService: TtsService
-) {
+) : CommandService {
     companion object Constants {
         const val NO_FACTS = "No facts available."
         const val FACT_ADDED = "Fact added."
     }
 
-    suspend fun handleFactCommand(
-        chat: Chat,
-        args: List<String>,
-        subCommand: String?,
-        comment: String,
-        sendMessage: suspend (String) -> Unit,
-        sendAudio: suspend (ContentInput, String) -> Unit,
-        input: (File) -> ContentInput
-    ) {
-        when (subCommand) {
+    override suspend fun handle(chat: Chat, update: UpdateContext) {
+        val bot = update.bot
+        val comment = update.args.drop(2).joinToString(" ")
+        when (update.subCommand) {
             SubCommand.ADD.name.lowercase() -> {
                 addFact(chat, comment)
-                sendMessage(FACT_ADDED)
+                bot.sendMessage(FACT_ADDED)
             }
             else -> {
-                val fact = getRandomFact()
-                if (fact.isEmpty()) {
-                    sendMessage(NO_FACTS)
-                    return
-                }
-                val file = ttsService.getAudio(fact)
-                if (file != null) {
-                    val contentInput = input(file)
-                    sendAudio(contentInput, fact)
-                } else {
-                    sendMessage(fact)
-                }
+                handleDefaultCommand(bot)
             }
         }
     }
@@ -57,8 +40,19 @@ class FactService(
         chatRepository.save(chat)
     }
 
-    fun getRandomFact(): String {
+    suspend fun handleDefaultCommand(bot: TelegramBotActions) {
         val facts = chatRepository.findAll().flatMap { it.facts }
-        return facts.shuffled().firstOrNull()?.comment ?: ""
+        val randomFact = facts.shuffled().firstOrNull()?.comment ?: ""
+        if (randomFact.isEmpty()) {
+            bot.sendMessage(NO_FACTS)
+            return
+        }
+        val file = ttsService.getAudio(randomFact)
+        if (file != null) {
+            bot.sendAudio(file, randomFact)
+        } else {
+            bot.sendMessage(randomFact)
+        }
     }
+
 }

@@ -21,7 +21,7 @@ class MemeService(
     private val redditClient: RedditClient,
     private val mediaUtil: MediaUtil,
     private val printerUtil: PrinterUtil
-) {
+) : CommandService {
     companion object Constants {
         const val REDDIT_URL = "https://www.reddit.com/r/"
         const val NO_SUBREDDITS_FOUND = "No subreddits found"
@@ -33,11 +33,8 @@ class MemeService(
         const val NO_MEMES_FOUND = "No memes found for this subreddit."
     }
 
-    suspend fun handleMemeCommand(
-        chat: Chat,
-        update: UpdateContext,
-        bot: TelegramBotActions
-    ) {
+    override suspend fun handle(chat: Chat, update: UpdateContext) {
+        val bot = update.bot
         val subredditName = update.args.getOrNull(2)?.removePrefix(REDDIT_URL)
         when (update.subCommand) {
             SubCommand.LIST.name.lowercase() -> handleListSubreddits(chat, bot)

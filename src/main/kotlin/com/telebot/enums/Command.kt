@@ -14,6 +14,10 @@ sealed class Command(
         fun fromCommand(selectedCommandData: String): Command {
             return values().find { it.command == selectedCommandData } ?: Help
         }
+
+        fun isCommand(text: String?): Boolean {
+            return text?.startsWith(PREFIX) == true
+        }
     }
 
     data object Menu : Command(

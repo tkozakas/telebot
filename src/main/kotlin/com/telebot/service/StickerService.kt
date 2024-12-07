@@ -4,6 +4,7 @@ import com.telebot.enums.SubCommand
 import com.telebot.handler.TelegramBotActions
 import com.telebot.model.Chat
 import com.telebot.model.Sticker
+import com.telebot.model.UpdateContext
 import com.telebot.repository.ChatRepository
 import com.telebot.util.PrinterUtil
 import kotlinx.coroutines.Dispatchers
@@ -14,7 +15,7 @@ import org.springframework.stereotype.Service
 class StickerService(
     private val chatRepository: ChatRepository,
     private val printerUtil: PrinterUtil
-) {
+) : CommandService {
     companion object Constants {
         const val TELEGRAM_STICKER_URL = "https://t.me/addstickers/"
         const val STICKER_SET_ALREADY_EXISTS = "Sticker set %s already exists"
@@ -24,16 +25,12 @@ class StickerService(
         const val STICKER_REMOVED = "Sticker %s removed"
     }
 
-    suspend fun handleStickerCommand(
-        chat: Chat,
-        args: List<String>,
-        subCommand: String?,
-        bot: TelegramBotActions,
-    ) {
-        when (subCommand) {
+    override suspend fun handle(chat: Chat, update: UpdateContext) {
+        val bot = update.bot
+        when (update.subCommand) {
             SubCommand.LIST.name.lowercase() -> handleListStickers(bot)
-            SubCommand.ADD.name.lowercase() -> handleAddSticker(chat, args, bot)
-            SubCommand.REMOVE.name.lowercase() -> handleRemoveSticker(chat, args, bot)
+            SubCommand.ADD.name.lowercase() -> handleAddSticker(chat, update.args, bot)
+            SubCommand.REMOVE.name.lowercase() -> handleRemoveSticker(chat, update.args, bot)
             else -> handleDefaultCommand(chat, bot)
         }
     }
@@ -93,7 +90,7 @@ class StickerService(
         bot.sendMessage(STICKER_REMOVED.format(stickerName))
     }
 
-    private suspend fun handleDefaultCommand(
+    suspend fun handleDefaultCommand(
         chat: Chat,
         bot: TelegramBotActions
     ) {

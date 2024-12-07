@@ -5,6 +5,7 @@ import com.telebot.handler.TelegramBotActions
 import com.telebot.model.Chat
 import com.telebot.model.Sentence
 import com.telebot.model.Stat
+import com.telebot.model.UpdateContext
 import com.telebot.properties.DailyMessageTemplate
 import com.telebot.repository.ChatRepository
 import com.telebot.repository.SentenceRepository
@@ -20,28 +21,24 @@ class DailyMessageService(
     private val sentenceRepository: SentenceRepository,
     private val dailyMessageTemplate: DailyMessageTemplate,
     private val printerUtil: PrinterUtil
-) {
+) : CommandService {
     companion object Constants {
         var CURRENT_YEAR = Year.now().value
         val randomDelayRange = 500L..1000L
     }
 
-    suspend fun handleDailyMessage(
-        chat: Chat,
-        userId: Long,
-        username: String,
-        subCommand: String?,
-        year: Int,
-        bot: TelegramBotActions
-    ) {
-        if (subCommand.isNullOrBlank()) {
+    override suspend fun handle(chat: Chat, update: UpdateContext) {
+        val bot = update.bot
+        val year = update.args.getOrNull(2)?.toIntOrNull() ?: CURRENT_YEAR
+
+        if (update.subCommand.isNullOrBlank()) {
             chooseRandomWinner(chat, bot)
             return
         }
 
-        val stats = when (subCommand.lowercase()) {
+        val stats = when (update.subCommand.lowercase()) {
             SubCommand.REGISTER.name.lowercase() -> {
-                register(chat, userId, username, bot)
+                register(chat, update.userId, update.username, bot)
                 return
             }
             SubCommand.ALL.name.lowercase() -> {

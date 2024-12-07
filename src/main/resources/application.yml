@@ -42,6 +42,7 @@ tts:
   use-speaker-boost: true
 
 schedule:
+  random-response-chance: 1
   daily-message: 0 0 12 * * *
   winner-reset: 0 0 0 * * *
 

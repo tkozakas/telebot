@@ -4,8 +4,8 @@ import com.telebot.client.GptClient
 import com.telebot.dto.GptRequestDTO
 import com.telebot.dto.GptResponseDTO
 import com.telebot.enums.SubCommand
-import com.telebot.handler.TelegramBotActions
 import com.telebot.model.Chat
+import com.telebot.model.UpdateContext
 import com.telebot.properties.GptProperties
 import org.springframework.stereotype.Service
 import java.nio.file.Path
@@ -16,7 +16,7 @@ class GptService(
     private val gptClient: GptClient,
     private val gptMessageStorageService: GptMessageStorageService,
     private val gptProperties: GptProperties
-) {
+) : CommandService {
     companion object Constants {
         const val INVALID_PROMPT = "Please provide a valid argument or prompt after the /gpt command."
         const val NO_RESPONSE = "GPT did not provide a response. Please try again."
@@ -24,15 +24,10 @@ class GptService(
         const val CHAT_HISTORY_EMPTY = "Chat history is empty."
     }
 
-    suspend fun handleGptCommand(
-        chat: Chat,
-        username: String,
-        args: List<String>,
-        subCommand: String?,
-        bot: TelegramBotActions
-    ) {
+    override suspend fun handle(chat: Chat, update: UpdateContext) {
+        val bot = update.bot
         val chatId = chat.telegramChatId ?: return
-        when (subCommand) {
+        when (update.subCommand) {
             SubCommand.MEMORY.name.lowercase() -> getChatHistory(chatId)?.let { file ->
                 bot.sendDocument(file.toFile())
             } ?: bot.sendMessage(CHAT_HISTORY_EMPTY)
@@ -42,11 +37,11 @@ class GptService(
                 bot.sendMessage(CHAT_HISTORY_CLEARED)
             }
 
-            else -> args.drop(1).joinToString(" ")
+            else -> update.args.joinToString(" ")
                 .takeIf { it.isNotBlank() }
-                ?.let { prompt -> processPrompt(chatId, username, prompt, true)?.let { bot.sendMessage(it, parseMode = "Markdown") } }
+                ?.let { prompt -> processPrompt(chatId, update.username, prompt, true)?.let { bot.sendMessage(it, parseMode = "Markdown") } }
                 ?: bot.sendMessage(
-                    if (args.size <= 1) INVALID_PROMPT else NO_RESPONSE
+                    if (update.args.size <= 1) INVALID_PROMPT else NO_RESPONSE
                 )
         }
     }

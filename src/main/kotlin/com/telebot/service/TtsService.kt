@@ -2,7 +2,8 @@ package com.telebot.service
 
 import com.telebot.client.TtsClient
 import com.telebot.dto.TtsRequestDTO
-import com.telebot.handler.TelegramBotActions
+import com.telebot.model.Chat
+import com.telebot.model.UpdateContext
 import com.telebot.properties.TtsProperties
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -14,16 +15,15 @@ import java.nio.file.Files
 class TtsService(
     private val ttsProperties: TtsProperties,
     private val ttsClient: TtsClient
-) {
+) : CommandService {
     companion object Constants {
         const val NO_RESPONSE = "TTS did not provide a response. Please try again."
         const val DEFAULT_TITLE = "audio"
     }
 
-    suspend fun handleTtsCommand(
-        messageText: String,
-        bot: TelegramBotActions
-    ) {
+    override suspend fun handle(chat: Chat, update: UpdateContext) {
+        val bot = update.bot
+        val messageText = update.args.joinToString(" ")
         withContext(Dispatchers.IO) {
             val tempFile = getAudio(messageText)
             if (tempFile == null) {

@@ -1,8 +1,7 @@
 package com.telebot.handler
 
 import com.telebot.enums.Command
-import com.telebot.model.Chat
-import com.telebot.repository.ChatRepository
+import com.telebot.model.UpdateContext
 import com.telebot.service.*
 import com.telebot.util.PrinterUtil
 import io.github.dehuckakpyt.telegrambot.annotation.HandlerComponent
@@ -18,114 +17,51 @@ class CommandHandler(
     private val dailyMessageService: DailyMessageService,
     private val ttsService: TtsService,
     private val stickerService: StickerService,
-    private val chatRepository: ChatRepository,
+    private val chatService: ChatService,
     private val printerUtil: PrinterUtil,
-    @Value("\${telegram-bot.username}") private val botUsername: String,
     @Value("\${daily-message.alias}") private val alias: String
 ) : BotHandler({
 
     command(Command.GPT.command) {
-        val chatName = message.chat.title
-        val chatId = message.chat.id
-        val username = message.from?.username ?: "User"
-        val args = message.text?.split(" ") ?: emptyList()
-        val subCommand = args.getOrNull(1)?.lowercase()
-        val chat = getChat(chatRepository, chatId, chatName, botUsername)
+        val update = UpdateContext(message, bot) { file -> input(file) }
+        val chat = chatService.saveChat(update.chatId, update.chatName)
 
-        val bot = TelegramBotActions(chatId = chatId, bot = bot, input = { file -> input(file) })
-
-        gptService.handleGptCommand(
-            chat = chat,
-            username = username,
-            args = args,
-            subCommand = subCommand,
-            bot = bot,
-        )
+        gptService.handle(chat = chat, update = update)
     }
 
     command(Command.DailyMessage.command.format(alias)) {
-        val chatName = message.chat.title
-        val chatId = message.chat.id
-        val userId = message.from?.id ?: 0
-        val username = message.from?.username ?: "User"
-        val args = message.text?.split(" ") ?: emptyList()
-        val subCommand = args.getOrNull(1)?.lowercase()
-        val year = args.getOrNull(2)?.toIntOrNull() ?: DailyMessageService.CURRENT_YEAR
-        val chat = getChat(chatRepository, chatId, chatName, botUsername)
+        val update = UpdateContext(message, bot) { file -> input(file) }
+        val chat = chatService.saveChat(update.chatId, update.chatName)
 
-        val bot = TelegramBotActions(chatId = chatId, bot = bot, input = { file -> input(file) })
-
-        dailyMessageService.handleDailyMessage(
-            chat = chat,
-            userId = userId,
-            username = username,
-            subCommand = subCommand,
-            year = year,
-            bot = bot
-        )
+        dailyMessageService.handle(chat = chat, update = update)
     }
 
     command(Command.Meme.command) {
-        val chatName = message.chat.title
-        val chatId = message.chat.id
-        val args = message.text?.split(" ") ?: emptyList()
-        val subCommand = args.getOrNull(1)?.lowercase()
-        val chat = getChat(chatRepository, chatId, chatName, botUsername)
+        val update = UpdateContext(message, bot) { file -> input(file) }
+        val chat = chatService.saveChat(update.chatId, update.chatName)
 
-        val bot = TelegramBotActions(chatId = chatId, bot = bot, input = { file -> input(file) })
-
-        memeService.handleMemeCommand(
-            chat = chat,
-            args = args,
-            subCommand = subCommand,
-            bot = bot
-        )
+        memeService.handle(chat = chat, update = update)
     }
 
     command(Command.Sticker.command) {
-        val chatName = message.chat.title
-        val chatId = message.chat.id
-        val args = message.text?.split(" ") ?: emptyList()
-        val subCommand = args.getOrNull(1)?.lowercase()
-        val chat = getChat(chatRepository, chatId, chatName, botUsername)
+        val update = UpdateContext(message, bot) { file -> input(file) }
+        val chat = chatService.saveChat(update.chatId, update.chatName)
 
-        val bot = TelegramBotActions(chatId = chatId, bot = bot, input = { file -> input(file) })
-
-        stickerService.handleStickerCommand(
-            chat = chat,
-            args = args,
-            subCommand = subCommand,
-            bot = bot
-        )
+        stickerService.handle(chat = chat, update = update)
     }
 
     command(Command.Fact.command) {
-        val chatName = message.chat.title
-        val chatId = message.chat.id
-        val args = message.text?.split(" ") ?: emptyList()
-        val subCommand = args.getOrNull(1)?.lowercase()
-        val comment = args.drop(2).joinToString(" ")
-        val chat = getChat(chatRepository, chatId, chatName, botUsername)
+        val update = UpdateContext(message, bot) { file -> input(file) }
+        val chat = chatService.saveChat(update.chatId, update.chatName)
 
-        factService.handleFactCommand(
-            chat = chat,
-            args = args,
-            subCommand = subCommand,
-            comment = comment,
-            sendMessage = { text -> sendMessage(text = text) },
-            sendAudio = { audio, caption -> sendAudio(audio = audio, caption = caption) },
-            input = { file -> input(file) }
-        )
+        factService.handle(chat = chat, update = update)
     }
 
     command(Command.Tts.command) {
-        val messageText = message.text?.substringAfter(" ") ?: ""
-        val bot = TelegramBotActions(chatId = message.chat.id, bot = bot, input = { file -> input(file) })
+        val update = UpdateContext(message, bot) { file -> input(file) }
+        val chat = chatService.saveChat(update.chatId, update.chatName)
 
-        ttsService.handleTtsCommand(
-            messageText = messageText,
-            bot = bot
-        )
+        ttsService.handle(chat = chat, update = update)
     }
 
     command(Command.Help.command) {
@@ -136,12 +72,3 @@ class CommandHandler(
         sendMessage(printerUtil.printHelp(), parseMode = "Markdown")
     }
 })
-
-private fun getChat(chatRepository: ChatRepository, chatId: Long, chatName: String?, username: String): Chat {
-    val chat = chatRepository.findByTelegramChatId(chatId) ?: Chat().apply {
-        telegramChatId = chatId
-    }
-    chat.chatName = chatName?.takeIf { it.isNotBlank() } ?: username
-    return chatRepository.save(chat)
-}
-

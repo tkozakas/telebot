@@ -5,6 +5,7 @@ gradlew.bat
 target/
 .mvn/
 .idea/
+.kotlin/
 *.iws
 *.iml
 *.ipr

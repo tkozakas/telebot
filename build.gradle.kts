@@ -11,6 +11,7 @@ version = "1.0-SNAPSHOT"
 
 var telegramBotVersion = "0.11.3"
 var springBootVersion = "3.3.0"
+var kotlinVersion = "1.6.10"
 
 configurations {
     compileOnly {
@@ -34,6 +35,11 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.1.4")
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
     implementation("com.arthenica:ffmpeg-kit-full-gpl:4.5.1-1")
+
+    testImplementation("org.mockito:mockito-core:4.11.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
+
+
 
 }
 

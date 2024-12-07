@@ -88,8 +88,8 @@ class DailyMessageService(
             dailyMessageTemplate.statsHeader.format(year)
         }
         val footer = dailyMessageTemplate.statsFooter.format(stats.size)
-
-        return printerUtil.printStats(header, stats, year, footer)
+        val body = dailyMessageTemplate.userStats
+        return printerUtil.printStats(header, stats, year, footer, body)
     }
 
     private fun aggregateStats(stats: Collection<Stat>): Map<Long, Stat> {

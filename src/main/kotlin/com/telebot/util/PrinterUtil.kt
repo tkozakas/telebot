@@ -12,20 +12,26 @@ class PrinterUtil(
     @Value("\${daily-message.alias}") private val alias: String
 ) {
 
-    fun printStats(header: String, stats: Map<Long, Stat>, year: String, footer: String? = null): String {
+    fun printStats(
+        header: String,
+        stats: Map<Long, Stat>,
+        year: String,
+        footer: String? = null,
+        bodyTemplate: String
+    ): String {
         val body = stats.entries
             .sortedByDescending { it.value.score ?: 0L }
             .withIndex()
             .joinToString("\n") { (index, entry) ->
                 val (_, stat) = entry
-                "**${index + 1}.** ${stat.username} — Score: ${stat.score ?: 0} ${if (stat.isWinner == true) "👑" else ""}"
+                bodyTemplate.format(index + 1, stat.username, stat.score) +
+                        if (stat.isWinner == true) " 👑" else ""
             }
 
         val formattedHeader = "*$header*"
         val finalFooter = footer?.let { "\n\n*$it*" } ?: ""
         return "$formattedHeader\n\n$body$finalFooter".trim()
     }
-
 
     fun printHelp(): String {
         return """

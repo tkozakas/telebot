@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.io.File
 import java.io.IOException
-import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -20,7 +19,7 @@ class MediaUtil {
 
     private fun ensureOutputDirExists() {
         val dirPath = Paths.get(outputDir)
-        if (!Files.exists(dirPath)) {
+        if (Files.notExists(dirPath)) {
             Files.createDirectories(dirPath)
         }
     }
@@ -29,60 +28,64 @@ class MediaUtil {
         ensureOutputDirExists()
         val file = File(outputDir, fileName)
         try {
-            val connection = URL(url).openConnection() as HttpURLConnection
-            connection.connectTimeout = 10_000
-            connection.readTimeout = 10_000
-            connection.inputStream.use { input ->
+            URL(url).openStream().use { input ->
                 file.outputStream().buffered().use { output ->
                     input.copyTo(output)
                 }
             }
-            if (!file.exists()) {
-                throw IOException("Failed to download file: $url")
-            }
+            if (!file.exists()) throw IOException("Failed to download file: $url")
             return file
         } catch (e: Exception) {
-            println("Error downloading file: ${e.message}")
-            throw e
+            throw IOException("Error downloading file from $url: ${e.message}", e)
         }
     }
 
     fun convertGifToMp4(gifUrl: String): String? {
-        try {
+        return try {
             ensureOutputDirExists()
             val uniqueId = UUID.randomUUID().toString()
             val gifFile = downloadFile(gifUrl, "temp_$uniqueId.gif")
             val mp4File = File(outputDir, "output_$uniqueId.mp4")
 
-            println("Converting GIF to MP4. Input: ${gifFile.absolutePath}, Output: ${mp4File.absolutePath}")
-
-            val process = ProcessBuilder(
-                "ffmpeg",
-                "-i", gifFile.absolutePath,
-                "-preset", "ultrafast",
-                "-movflags", "faststart",
-                "-pix_fmt", "yuv420p",
-                mp4File.absolutePath
-            ).start()
-
-            val exitCode = process.waitFor()
-            if (exitCode != 0) {
-                println("FFmpeg process failed. Exit code: $exitCode")
-            }
-
-            gifFile.delete()
-            return if (mp4File.exists()) {
+            if (runFfmpegConversion(gifFile, mp4File)) {
+                gifFile.delete()
                 tempFiles.add(mp4File)
                 mp4File.absolutePath
-            } else null
-        } catch (e: IOException) {
+            } else {
+                gifFile.delete()
+                null
+            }
+        } catch (e: Exception) {
             println("Error converting GIF to MP4: ${e.message}")
-            return null
+            null
         }
     }
 
+    private fun runFfmpegConversion(inputFile: File, outputFile: File): Boolean {
+        println("Converting GIF to MP4. Input: ${inputFile.absolutePath}, Output: ${outputFile.absolutePath}")
+
+        val process = ProcessBuilder(
+            "ffmpeg",
+            "-i", inputFile.absolutePath,
+            "-preset", "ultrafast",
+            "-movflags", "faststart",
+            "-pix_fmt", "yuv420p",
+            outputFile.absolutePath
+        ).start()
+
+        val exitCode = process.waitFor()
+        if (exitCode != 0) {
+            println("FFmpeg conversion failed. Exit code: $exitCode")
+        }
+        return exitCode == 0
+    }
+
     fun deleteTempFiles() {
-        tempFiles.forEach { it.delete() }
+        tempFiles.forEach { file ->
+            if (file.exists() && !file.delete()) {
+                println("Failed to delete temp file: ${file.absolutePath}")
+            }
+        }
         tempFiles.clear()
     }
 }

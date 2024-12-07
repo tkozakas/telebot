@@ -45,11 +45,11 @@ class DailyMessageService(
                 aggregateStats(chat.stats)
             }
             SubCommand.STATS.name.lowercase() -> {
-                val stats = chat.stats.find { it.year == year }?.let { listOf(it) } ?: emptyList()
+                val stats = chat.stats.filter { it.year == year }
                 aggregateStats(stats)
             }
             else -> {
-                val stats = chat.stats.find { it.year == CURRENT_YEAR }?.let { listOf(it) } ?: emptyList()
+                val stats = chat.stats.filter { it.year == CURRENT_YEAR }
                 aggregateStats(stats)
             }
         }

@@ -153,7 +153,7 @@ class DailyMessageService(
     }
 
     private fun updateWinner(chat: Chat, winner: Stat) {
-        chat.stats.find { it.userId == winner.userId }?.apply {
+        chat.stats.find { it.userId == winner.userId && it.year == CURRENT_YEAR }?.apply {
             this.score = this.score?.plus(1)
             this.isWinner = true
         }

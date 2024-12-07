@@ -25,7 +25,7 @@ class RandomResponseHandler(
     suspend fun handle(telegramChat: Chat, telegramBot: TelegramBot, text: String?) {
         if (Command.isCommand(text) || !shouldTriggerRandomResponse()) return
 
-        val chat = chatService.saveChat(telegramChat.id, telegramChat.title) ?: return
+        val chat = chatService.saveChat(telegramChat.id, telegramChat.title)
         val bot = TelegramBotActions(chatId = chat.telegramChatId!!, bot = telegramBot, input = null)
 
         when (val handler = selectRandomHandler()) {

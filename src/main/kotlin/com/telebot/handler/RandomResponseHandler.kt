@@ -1,7 +1,6 @@
 package com.telebot.handler
 
 import com.telebot.enums.Command
-import com.telebot.repository.ChatRepository
 import com.telebot.service.ChatService
 import com.telebot.service.CommandService
 import com.telebot.service.FactService
@@ -17,7 +16,6 @@ class RandomResponseHandler(
     @Value("\${schedule.random-response-chance}") private val randomResponseChance: Double,
     private val factService: FactService,
     private val stickerService: StickerService,
-    private val chatRepository: ChatRepository,
     private val chatService: ChatService
 ) {
     private val random = Random()

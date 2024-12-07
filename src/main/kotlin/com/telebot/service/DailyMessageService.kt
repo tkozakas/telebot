@@ -119,14 +119,15 @@ class DailyMessageService(
         }
 
         val currentWinner = stats.find { it.isWinner == true && it.year == CURRENT_YEAR }
-        val winner = if (currentWinner != null) {
-            bot.sendMessage(dailyMessageTemplate.winnerExists.format(currentWinner.username, currentWinner.score), parseMode = "Markdown")
+        val sentences = getRandomGroupSentences().sortedBy { it.orderNumber }
+        val winner = currentWinner ?: stats.randomOrNull()?.apply { isWinner = true }
+        if (currentWinner != null || sentences.isEmpty()) {
+            if (currentWinner != null) {
+                bot.sendMessage(dailyMessageTemplate.winnerExists.format(currentWinner.username, currentWinner.score), parseMode = "Markdown")
+            }
             return
-        } else {
-            stats.randomOrNull()?.apply { isWinner = true }
         }
 
-        val sentences = getRandomGroupSentences().sortedBy { it.orderNumber }
         runBlocking {
             sentences.forEachIndexed { _, sentence ->
                 val delayTime = randomDelayRange.random()

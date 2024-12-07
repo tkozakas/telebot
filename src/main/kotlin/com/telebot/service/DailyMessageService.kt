@@ -30,6 +30,7 @@ class DailyMessageService(
     override suspend fun handle(chat: Chat, update: UpdateContext) {
         val bot = update.bot
         val year = update.args.getOrNull(2)?.toIntOrNull() ?: CURRENT_YEAR
+
         when (update.subCommand?.lowercase()) {
             null -> chooseRandomWinner(chat, bot)
             SubCommand.REGISTER.name.lowercase() -> registerUser(chat, update.userId, update.username, bot)
@@ -121,19 +122,26 @@ class DailyMessageService(
         val currentWinner = stats.find { it.isWinner == true && it.year == CURRENT_YEAR }
         if (currentWinner != null) {
             bot.sendMessage(
-                dailyMessageTemplate.winnerExists.format(currentWinner.username, currentWinner.score),
+                dailyMessageTemplate.winnerExists.format(dailyMessageTemplate.alias, currentWinner.username),
                 parseMode = "Markdown"
             )
             return
         }
 
         val sentences = getRandomGroupSentences()
-        val winner = stats.randomOrNull()?.apply { isWinner = true } ?: return
+        val winner = stats.filter { it.year == CURRENT_YEAR }.randomOrNull()?.apply { isWinner = true } ?: return
         sendWinnerMessages(sentences, winner, bot)
         updateWinner(chat, winner)
     }
 
     private suspend fun sendWinnerMessages(sentences: List<Sentence>, winner: Stat, bot: TelegramBotActions) {
+        if (sentences.isEmpty()) {
+            bot.sendMessage(
+                dailyMessageTemplate.winnerExists.format(dailyMessageTemplate.alias, winner.username),
+                parseMode = "Markdown"
+            )
+            return
+        }
         runBlocking {
             sentences.sortedBy { it.orderNumber }.forEach { sentence ->
                 delay(RANDOM_DELAY_RANGE.random())

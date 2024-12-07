@@ -75,7 +75,7 @@ class StickerService(
         bot.sendMessage(STICKER_REMOVED.format(stickerName))
     }
 
-    private suspend fun sendRandomSticker(chat: Chat, bot: TelegramBotActions) {
+    suspend fun sendRandomSticker(chat: Chat, bot: TelegramBotActions) {
         val sticker = chat.stickers.randomOrNull()
         if (sticker == null) {
             bot.sendMessage(NO_STICKERS_FOUND)

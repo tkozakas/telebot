@@ -47,8 +47,8 @@ class RandomResponseHandler(
 
         val bot = TelegramBotActions(chatId = chat.telegramChatId!!, bot = telegramBot, input = null)
         when (selectRandomHandler()) {
-            is FactService -> factService.handleDefaultCommand(bot);
-            is StickerService -> stickerService.handleDefaultCommand(chat, bot);
+            is FactService -> factService.provideRandomFact(bot);
+            is StickerService -> stickerService.sendRandomSticker(chat, bot);
         }
     }
 }

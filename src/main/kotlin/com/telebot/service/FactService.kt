@@ -43,7 +43,7 @@ class FactService(
         chatRepository.save(chat)
     }
 
-    private suspend fun provideRandomFact(bot: TelegramBotActions) {
+    suspend fun provideRandomFact(bot: TelegramBotActions) {
         when (val randomFact = getRandomFact()) {
             null -> bot.sendMessage(NO_FACTS)
             else -> respondWithFact(bot, randomFact)

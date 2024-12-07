@@ -9,6 +9,7 @@ import com.telebot.model.Subreddit
 import com.telebot.model.UpdateContext
 import com.telebot.util.MediaUtil
 import com.telebot.util.PrinterUtil
+import io.github.dehuckakpyt.telegrambot.model.telegram.InputMedia
 import io.github.dehuckakpyt.telegrambot.model.telegram.InputMediaPhoto
 import io.github.dehuckakpyt.telegrambot.model.telegram.InputMediaVideo
 import org.springframework.stereotype.Service
@@ -110,7 +111,7 @@ class MemeService(
         post: RedditResponseDTO.RedditPostDTO,
         subreddit: String,
         bot: TelegramBotActions
-    ): Any? {
+    ): InputMedia? {
         val caption = "r/$subreddit\n${post.title} by ${post.author}"
         val url = post.url ?: return null
 

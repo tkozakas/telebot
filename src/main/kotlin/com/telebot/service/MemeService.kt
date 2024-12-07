@@ -6,6 +6,7 @@ import com.telebot.enums.SubCommand
 import com.telebot.handler.TelegramBotActions
 import com.telebot.model.Chat
 import com.telebot.model.Subreddit
+import com.telebot.model.UpdateContext
 import com.telebot.repository.ChatRepository
 import com.telebot.util.MediaUtil
 import com.telebot.util.PrinterUtil
@@ -33,17 +34,16 @@ class MemeService(
     }
 
     suspend fun handleMemeCommand(
-        args: List<String>,
-        subCommand: String?,
         chat: Chat,
+        update: UpdateContext,
         bot: TelegramBotActions
     ) {
-        val subredditName = args.getOrNull(2)?.removePrefix(REDDIT_URL)
-        when (subCommand) {
+        val subredditName = update.args.getOrNull(2)?.removePrefix(REDDIT_URL)
+        when (update.subCommand) {
             SubCommand.LIST.name.lowercase() -> handleListSubreddits(chat, bot)
             SubCommand.ADD.name.lowercase() -> handleAddSubreddit(chat, subredditName, bot)
             SubCommand.REMOVE.name.lowercase() -> handleRemoveSubreddit(chat, subredditName, bot)
-            else -> handleDefaultCommand(chat, args, subCommand, bot)
+            else -> handleDefaultCommand(chat, update.args, update.subCommand, bot)
         }
     }
 
@@ -101,9 +101,8 @@ class MemeService(
         val mediaGroup = redditPosts.mapNotNull { post ->
             val caption = "r/$subreddit\n${post.title} by ${post.author}"
             val url = post.url ?: return@mapNotNull null
-            val media = bot.input?.let { it(File(url)) }
             when {
-                url.endsWith(".mp4", true) -> media?.let { InputMediaVideo(media = it, caption = caption) }
+                url.endsWith(".mp4", true) -> bot.input?.let { it(File(url)) }?.let { InputMediaVideo(media = it, caption = caption) }
                 url.endsWith(".jpg", true) || url.endsWith(".jpeg", true) || url.endsWith(".png", true) ->
                     InputMediaPhoto(media = url, caption = caption)
 

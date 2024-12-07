@@ -3,7 +3,7 @@ WORKDIR /app
 COPY settings.gradle.kts .
 COPY build.gradle.kts .
 COPY src/ ./src/
-RUN gradle build --no-daemon --debug
+RUN gradle build --no-daemon --info
 RUN java -Djarmode=layertools -jar build/libs/telebot*.jar extract
 
 FROM gradle:8-jdk21-alpine

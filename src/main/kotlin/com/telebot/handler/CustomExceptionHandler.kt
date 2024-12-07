@@ -18,7 +18,10 @@ class CustomExceptionHandler(
             block()
         } catch (e: Exception) {
             if (e is ChatException) {
-                bot.sendMessage(chat.id, "An unknown command has been entered. You can view the possible actions by invoking the /help command.")
+                bot.sendMessage(
+                    chat.id,
+                    "An unknown command has been entered. You can view the possible actions by invoking the /help command."
+                )
                 return
             }
             logger.error("Unexpected exception in chat: ${chat.title}: ${e.printStackTrace()}")

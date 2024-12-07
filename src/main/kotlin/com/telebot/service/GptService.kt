@@ -72,5 +72,5 @@ class GptService(
             createTempFile(prefix = "chat_history_", suffix = ".txt").apply {
                 writeText(it.joinToString("\n") { msg -> "${msg.role}: ${msg.content}" })
             }
-    }
+        }
 }

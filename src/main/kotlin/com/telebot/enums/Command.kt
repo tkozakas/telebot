@@ -11,10 +11,6 @@ sealed class Command(
 
         fun values() = listOf(Help, Start, GPT, Meme, Sticker, Fact, DailyMessage)
 
-        fun fromCommand(selectedCommandData: String): Command {
-            return values().find { it.command == selectedCommandData } ?: Help
-        }
-
         fun isCommand(text: String?): Boolean {
             return text?.startsWith(PREFIX) == true
         }

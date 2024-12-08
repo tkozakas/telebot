@@ -121,8 +121,9 @@ class DailyMessageService(
 
         val currentWinner = stats.find { it.isWinner == true && it.year == CURRENT_YEAR }
         if (currentWinner != null) {
+            val metionedUser = "[" + currentWinner.username + "](tg://user?id=" + currentWinner.username + ")";
             bot.sendMessage(
-                dailyMessageTemplate.winnerExists.format(dailyMessageTemplate.alias, currentWinner.username),
+                dailyMessageTemplate.winnerExists.format(dailyMessageTemplate.alias, metionedUser),
                 parseMode = "Markdown"
             )
             return
@@ -145,7 +146,8 @@ class DailyMessageService(
         runBlocking {
             sentences.sortedBy { it.orderNumber }.forEach { sentence ->
                 delay(RANDOM_DELAY_RANGE.random())
-                sentence.text?.format(dailyMessageTemplate.alias, winner.username)?.let {
+                val metionedUser = "[" + winner.username + "](tg://user?id=" + winner.username + ")";
+                sentence.text?.format(dailyMessageTemplate.alias, metionedUser)?.let {
                     bot.sendMessage(it, parseMode = "Markdown")
                 }
             }

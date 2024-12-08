@@ -9,7 +9,7 @@ sealed class Command(
     companion object {
         const val PREFIX = "/"
 
-        fun values() = listOf(Help, Start, GPT, Meme, Sticker, Menu, Fact, DailyMessage)
+        fun values() = listOf(Help, Start, GPT, Meme, Sticker, Fact, DailyMessage)
 
         fun fromCommand(selectedCommandData: String): Command {
             return values().find { it.command == selectedCommandData } ?: Help
@@ -19,12 +19,6 @@ sealed class Command(
             return text?.startsWith(PREFIX) == true
         }
     }
-
-    data object Menu : Command(
-        "${PREFIX}menu",
-        "Displays the menu",
-        subCommands = emptyList()
-    )
 
     data object Help : Command(
         "${PREFIX}help",

@@ -20,4 +20,7 @@ class ChatService(
     fun save(chat: Chat) = chatRepository.save(chat)
 
     fun findAll(): List<Chat> = chatRepository.findAll()
+
+    fun saveAll(chats: List<Chat>): List<Chat> = chatRepository.saveAll(chats)
+
 }

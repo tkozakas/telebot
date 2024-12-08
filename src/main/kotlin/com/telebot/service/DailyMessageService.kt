@@ -166,8 +166,10 @@ class DailyMessageService(
     }
 
     fun resetWinners() {
-        chatService.findAll().forEach { chat ->
+        val chats = chatService.findAll()
+        chats.forEach { chat ->
             chat.stats.forEach { it.isWinner = false }
         }
+        chatService.saveAll(chats)
     }
 }

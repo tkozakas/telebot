@@ -2,9 +2,10 @@ package com.telebot.service
 
 import com.telebot.client.TtsClient
 import com.telebot.dto.TtsRequestDTO
-import com.telebot.model.Chat
 import com.telebot.model.UpdateContext
 import com.telebot.properties.TtsProperties
+import eu.vendeli.tgbot.api.media.sendAudio
+import eu.vendeli.tgbot.api.message.sendMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.springframework.stereotype.Service
@@ -23,20 +24,18 @@ class TtsService(
         private const val TEMP_FILE_EXTENSION = ".mp3"
     }
 
-    override suspend fun handle(chat: Chat, update: UpdateContext) {
+    override suspend fun handle(update: UpdateContext) {
         val messageText = update.args.drop(1).joinToString(" ")
         val tempAudioFile = generateAudioFile(messageText)
 
-        withContext(Dispatchers.IO) {
-            if (tempAudioFile == null) {
-                update.bot.sendMessage(NO_RESPONSE_MESSAGE)
-            } else {
-                update.bot.sendAudio(tempAudioFile, messageText)
-            }
+        if (tempAudioFile == null) {
+            sendMessage { NO_RESPONSE_MESSAGE }.send(update.chatId, update.bot)
+        } else {
+            sendAudio { tempAudioFile.absolutePath }.send(update.chatId, update.bot)
         }
     }
 
-    fun generateAudioFile(messageText: String): File? {
+    suspend fun generateAudioFile(messageText: String): File? {
         val request = TtsRequestDTO(
             text = messageText,
             modelId = ttsProperties.modelId,
@@ -49,14 +48,12 @@ class TtsService(
         )
 
         for (apiKey in ttsProperties.token) {
-            val audioBytes = try {
-                ttsClient.generateSpeech(apiKey, ttsProperties.voiceId, request)
-            } catch (e: Exception) {
-                null
-            }
+            val audioBytes = ttsClient.generateSpeech(apiKey, ttsProperties.voiceId, request)
 
             if (audioBytes != null) {
-                return File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_EXTENSION).apply {
+                return withContext(Dispatchers.IO) {
+                    File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_EXTENSION)
+                }.apply {
                     Files.write(toPath(), audioBytes)
                 }
             }

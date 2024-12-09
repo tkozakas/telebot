@@ -1,21 +1,20 @@
 package com.telebot.config
 
-import com.telebot.handler.CustomExceptionHandler
-import io.github.dehuckakpyt.telegrambot.annotation.EnableTelegramBot
-import io.github.dehuckakpyt.telegrambot.config.TelegramBotConfig
-import io.github.dehuckakpyt.telegrambot.ext.strategy.invocation.smartSync
-import io.github.dehuckakpyt.telegrambot.strategy.invocation.HandlerInvocationStrategy
-import org.springframework.context.annotation.Bean
+import eu.vendeli.spring.starter.BotConfiguration
+import eu.vendeli.tgbot.types.internal.LogLvl
+import eu.vendeli.tgbot.utils.BotConfigurator
 import org.springframework.context.annotation.Configuration
 
-@EnableTelegramBot
 @Configuration
-class BotConfig {
-    @Bean
-    fun telegramBotConfig(): TelegramBotConfig = TelegramBotConfig().apply {
-        receiving {
-            invocationStrategy = { HandlerInvocationStrategy.smartSync }
-            exceptionHandler = { CustomExceptionHandler(bot = telegramBot) }
+class BotConfig : BotConfiguration() {
+    override fun applyCfg(): BotConfigurator = {
+        logging {
+            botLogLevel = LogLvl.INFO
+        }
+        commandParsing {
+            commandDelimiter = '/'
+            commandDelimiter = ' '
+            restrictSpacesInCommands = true
         }
     }
 }

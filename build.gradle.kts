@@ -1,16 +1,20 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+val javaTarget = JavaVersion.VERSION_21
+
 plugins {
     kotlin("plugin.jpa") version "2.1.0"
     kotlin("jvm") version "1.9.25"
     kotlin("plugin.spring") version "1.9.25"
     id("org.springframework.boot") version "3.3.0"
     id("io.spring.dependency-management") version "1.1.6"
+    id("com.google.devtools.ksp") version "2.1.0-1.0.29"
+    id("eu.vendeli.telegram-bot") version "7.6.0"
 }
 
 group = "com.telebot"
 version = "1.0-SNAPSHOT"
-
-var telegramBotVersion = "0.11.3"
-var springBootVersion = "3.3.0"
+java.sourceCompatibility = javaTarget
 
 configurations {
     compileOnly {
@@ -20,33 +24,45 @@ configurations {
 
 repositories {
     mavenCentral()
+    maven("https://mvn.vendeli.eu/telegram-bot")
 }
 
 dependencies {
-    implementation("io.github.dehuckakpyt.telegrambot:telegram-bot-core:$telegramBotVersion")
-    implementation("io.github.dehuckakpyt.telegrambot:telegram-bot-spring:$telegramBotVersion")
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion")
+    implementation("eu.vendeli:spring-ktgram-starter:7.6.0")
+
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.1.4")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
     implementation("org.hibernate:hibernate-core:6.6.3.Final")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.postgresql:postgresql:42.7.4")
 
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.1.4")
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
     implementation("com.arthenica:ffmpeg-kit-full-gpl:4.5.1-1")
 
-}
-
-kotlin {
-    compilerOptions {
-        freeCompilerArgs.addAll("-Xjsr305=strict")
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
     }
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
+kotlin {
+    jvmToolchain(javaTarget.majorVersion.toInt())
 }
 
-tasks.jar {
-    enabled = false
+tasks {
+    compileJava {
+        targetCompatibility = javaTarget.majorVersion
+        sourceCompatibility = javaTarget.majorVersion
+    }
+
+    withType<Test> {
+        useJUnitPlatform()
+    }
+    withType<KotlinCompile> {
+        kotlinOptions {
+            freeCompilerArgs = listOf("-Xjsr305=strict")
+            jvmTarget = javaTarget.majorVersion
+        }
+    }
 }

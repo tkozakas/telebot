@@ -12,9 +12,10 @@ spring:
 media:
   output-dir: "${TMP_DIR:tmp}"
 
-telegram:
-  username: # <<your_username>>
-  token: # <<your_token>>
+ktgram:
+  username: # <<your_username>> not mandatory
+  bot:
+    - token: # <<your_token>>
 
 gpt:
   token: # <<your_token>>

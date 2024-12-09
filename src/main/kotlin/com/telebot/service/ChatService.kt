@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service
 @Service
 class ChatService(
     private val chatRepository: ChatRepository,
-    @Value("\${telegram-bot.username}") private val botUsername: String
+    @Value("\${ktgram.username}") private val botUsername: String
 ) {
 
     fun saveChat(chatId: Long, chatName: String?): Chat {
@@ -22,5 +22,9 @@ class ChatService(
     fun findAll(): List<Chat> = chatRepository.findAll()
 
     fun saveAll(chats: List<Chat>): List<Chat> = chatRepository.saveAll(chats)
+
+    fun findOrCreate(chatId: Long, chatName: String?): Chat {
+        return chatRepository.findByTelegramChatId(chatId) ?: saveChat(chatId, chatName)
+    }
 
 }

@@ -1,20 +1,19 @@
 package com.telebot.service
 
 import com.telebot.enums.SubCommand
-import com.telebot.handler.TelegramBotActions
-import com.telebot.model.Chat
-import com.telebot.model.Sticker
 import com.telebot.model.UpdateContext
-import com.telebot.repository.ChatRepository
 import com.telebot.util.PrinterUtil
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import eu.vendeli.tgbot.api.media.sticker
+import eu.vendeli.tgbot.api.message.sendMessage
+import eu.vendeli.tgbot.api.stickerset.getStickerSet
+import eu.vendeli.tgbot.types.ParseMode
+import eu.vendeli.tgbot.types.internal.getOrNull
 import org.springframework.stereotype.Service
 
 @Service
 class StickerService(
-    private val chatRepository: ChatRepository,
-    private val printerUtil: PrinterUtil
+    private val printerUtil: PrinterUtil,
+    private val chatService: ChatService
 ) : CommandService {
 
     companion object {
@@ -26,61 +25,71 @@ class StickerService(
         private const val STICKER_REMOVED = "Sticker %s removed"
     }
 
-    override suspend fun handle(chat: Chat, update: UpdateContext) {
+    override suspend fun handle(update: UpdateContext) {
         when (update.subCommand) {
-            SubCommand.LIST.name.lowercase() -> listStickers(update.bot)
-            SubCommand.ADD.name.lowercase() -> addSticker(chat, update.args, update.bot)
-            SubCommand.REMOVE.name.lowercase() -> removeSticker(chat, update.args, update.bot)
-            else -> sendRandomSticker(chat, update.bot)
+            SubCommand.LIST.name.lowercase() -> listStickers(update)
+            SubCommand.ADD.name.lowercase() -> addSticker(update)
+            SubCommand.REMOVE.name.lowercase() -> removeSticker(update)
+            else -> sendRandomSticker(update)
         }
     }
 
-    private suspend fun listStickers(bot: TelegramBotActions) {
-        val stickers = chatRepository.findAll().flatMap { it.stickers }
+    private suspend fun listStickers(update: UpdateContext) {
+        val stickers = chatService.findAll().flatMap { it.stickers }
         val message = if (stickers.isEmpty()) NO_STICKERS_FOUND else printerUtil.printStickers(stickers)
-        bot.sendMessage(message, parseMode = if (stickers.isNotEmpty()) "Markdown" else null)
+        sendMessage { message }.options { parseMode = ParseMode.Markdown }.send(update.chatId, update.bot)
     }
 
-    private suspend fun addSticker(chat: Chat, args: List<String>, bot: TelegramBotActions) {
-        val stickerName = args.getOrNull(2)?.removePrefix(TELEGRAM_STICKER_URL)
+    private suspend fun addSticker(update: UpdateContext) {
+        val stickerName = update.args.getOrNull(2)?.removePrefix(TELEGRAM_STICKER_URL)
         if (stickerName.isNullOrBlank()) {
-            bot.sendMessage(INVALID_STICKER_NAME)
+            sendMessage { INVALID_STICKER_NAME }.send(update.chatId, update.bot)
             return
         }
-        if (chat.stickers.any { it.stickerSetName == stickerName }) {
-            bot.sendMessage(STICKER_SET_ALREADY_EXISTS.format(stickerName))
+        if (update.chat.stickers.any { it.stickerSetName == stickerName }) {
+            sendMessage { STICKER_SET_ALREADY_EXISTS.format(stickerName) }.send(update.chatId, update.bot)
             return
         }
-        val stickers = bot.getStickerSet(stickerName).stickers.map {
-            Sticker(fileId = it.fileId, stickerSetName = stickerName, emoji = it.emoji, chat = chat)
+        val stickerSet = getStickerSet(stickerName).sendReturning(update.bot)
+        val stickers = stickerSet.getOrNull()?.stickers?.map {
+            com.telebot.model.Sticker(
+                stickerSetName = stickerName,
+                fileId = it.fileId,
+                emoji = it.emoji,
+                chat = update.chat
+            )
         }
-        chat.stickers.addAll(stickers)
-        withContext(Dispatchers.IO) { chatRepository.save(chat) }
-        bot.sendMessage(STICKER_ADDED.format(stickerName))
+        if (stickers.isNullOrEmpty()) {
+            sendMessage { NO_STICKERS_FOUND }.send(update.chatId, update.bot)
+            return
+        }
+        update.chat.stickers.addAll(stickers)
+        chatService.save(update.chat)
+        sendMessage { STICKER_ADDED.format(stickerName) }.send(update.chatId, update.bot)
     }
 
-    private suspend fun removeSticker(chat: Chat, args: List<String>, bot: TelegramBotActions) {
-        val stickerName = args.getOrNull(2)
+    private suspend fun removeSticker(update: UpdateContext) {
+        val stickerName = update.args.getOrNull(2)
         if (stickerName.isNullOrBlank()) {
-            bot.sendMessage(INVALID_STICKER_NAME)
+            sendMessage { INVALID_STICKER_NAME }.send(update.chatId, update.bot)
             return
         }
-        val stickers = chat.stickers.filter { it.stickerSetName == stickerName }
+        val stickers = update.chat.stickers.filter { it.stickerSetName == stickerName }
         if (stickers.isEmpty()) {
-            bot.sendMessage(NO_STICKERS_FOUND)
+            sendMessage { NO_STICKERS_FOUND }.send(update.chatId, update.bot)
             return
         }
-        chat.stickers.removeAll(stickers.toSet())
-        withContext(Dispatchers.IO) { chatRepository.save(chat) }
-        bot.sendMessage(STICKER_REMOVED.format(stickerName))
+        update.chat.stickers.removeAll(stickers.toSet())
+        chatService.save(update.chat)
+        sendMessage { STICKER_REMOVED.format(stickerName) }.send(update.chatId, update.bot)
     }
 
-    suspend fun sendRandomSticker(chat: Chat, bot: TelegramBotActions) {
-        val sticker = chat.stickers.randomOrNull()
-        if (sticker == null) {
-            bot.sendMessage(NO_STICKERS_FOUND)
+    suspend fun sendRandomSticker(update: UpdateContext) {
+        val sticker = update.chat.stickers.randomOrNull()
+        if (sticker == null || sticker.fileId.isNullOrBlank()) {
+            sendMessage { NO_STICKERS_FOUND }.send(update.chatId, update.bot)
         } else {
-            sticker.fileId?.let { bot.sendSticker(it) }
+            sticker { sticker.fileId!! }.send(update.chatId, update.bot)
         }
     }
 }

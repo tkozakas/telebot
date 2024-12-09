@@ -3,10 +3,10 @@ package com.telebot.service
 import com.telebot.client.GptClient
 import com.telebot.dto.GptRequestDTO
 import com.telebot.enums.SubCommand
-import com.telebot.handler.TelegramBotActions
-import com.telebot.model.Chat
 import com.telebot.model.UpdateContext
 import com.telebot.properties.GptProperties
+import eu.vendeli.tgbot.api.media.sendDocument
+import eu.vendeli.tgbot.api.message.sendMessage
 import org.springframework.stereotype.Service
 import kotlin.io.path.createTempFile
 import kotlin.io.path.writeText
@@ -25,34 +25,38 @@ class GptService(
         private const val CHAT_HISTORY_EMPTY = "Chat history is empty."
     }
 
-    override suspend fun handle(chat: Chat, update: UpdateContext) {
-        val chatId = chat.telegramChatId ?: return
+    override suspend fun handle(update: UpdateContext) {
         val prompt = update.args.drop(1).joinToString(" ")
 
-        when (update.subCommand) {
-            SubCommand.MEMORY.name.lowercase() -> sendChatHistory(chatId, update.bot)
-            SubCommand.FORGET.name.lowercase() -> clearChatHistory(chatId, update.bot)
-            else -> processChat(chatId, prompt, update.bot)
+        when (update.subCommand?.lowercase()) {
+            SubCommand.MEMORY.name.lowercase() -> sendChatHistory(update)
+            SubCommand.FORGET.name.lowercase() -> clearChatHistory(update)
+            else -> processChat(update, prompt)
         }
     }
 
-    private suspend fun sendChatHistory(chatId: Long, bot: TelegramBotActions) {
-        val historyFile = generateChatHistory(chatId)
-        bot.sendDocument(historyFile?.toFile() ?: run { bot.sendMessage(CHAT_HISTORY_EMPTY); return })
+    private suspend fun sendChatHistory(update: UpdateContext) {
+        val historyFile = generateChatHistory(update.chatId)
+        if (historyFile == null) {
+            sendMessage { CHAT_HISTORY_EMPTY }.send(update.chatId, update.bot)
+        } else {
+            sendDocument { historyFile.toFile().absolutePath }
+                .send(update.chatId, update.bot)
+        }
     }
 
-    private suspend fun clearChatHistory(chatId: Long, bot: TelegramBotActions) {
-        gptMessageStorageService.clearMessages(chatId)
-        bot.sendMessage(CHAT_HISTORY_CLEARED)
+    private suspend fun clearChatHistory(update: UpdateContext) {
+        gptMessageStorageService.clearMessages(update.chatId)
+        sendMessage { CHAT_HISTORY_CLEARED }.send(update.chatId, update.bot)
     }
 
-    private suspend fun processChat(chatId: Long, prompt: String, bot: TelegramBotActions) {
+    private suspend fun processChat(update: UpdateContext, prompt: String) {
         if (prompt.isBlank()) {
-            bot.sendMessage(INVALID_PROMPT)
+            sendMessage { INVALID_PROMPT }.send(update.chatId, update.bot)
             return
         }
-        val response = processPrompt(chatId, prompt)
-        bot.sendMessage(response ?: NO_RESPONSE, parseMode = response?.let { "Markdown" })
+        val response = processPrompt(update.chatId, prompt)
+        sendMessage { response ?: NO_RESPONSE }.send(update.chatId, update.bot)
     }
 
     private fun processPrompt(chatId: Long, prompt: String): String? {

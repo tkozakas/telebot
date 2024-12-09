@@ -1,11 +1,13 @@
 package com.telebot.service
 
 import com.telebot.enums.SubCommand
-import com.telebot.handler.TelegramBotActions
 import com.telebot.model.Chat
 import com.telebot.model.Fact
 import com.telebot.model.UpdateContext
 import com.telebot.repository.ChatRepository
+import eu.vendeli.tgbot.api.media.sendAudio
+import eu.vendeli.tgbot.api.message.sendMessage
+import eu.vendeli.tgbot.types.ParseMode
 import org.springframework.stereotype.Service
 
 @Service
@@ -17,24 +19,25 @@ class FactService(
     companion object {
         private const val NO_FACTS = "No facts available."
         private const val FACT_ADDED = "Fact added."
+        private const val FACT_BLANK = "Fact cannot be blank."
     }
 
-    override suspend fun handle(chat: Chat, update: UpdateContext) {
+    override suspend fun handle(update: UpdateContext) {
         val factText = update.args.drop(2).joinToString(" ")
 
         when (update.subCommand) {
-            SubCommand.ADD.name.lowercase() -> addFact(chat, factText, update.bot)
-            else -> provideRandomFact(update.bot)
+            SubCommand.ADD.name.lowercase() -> addFact(factText, update)
+            else -> provideRandomFact(update)
         }
     }
 
-    private suspend fun addFact(chat: Chat, factText: String, bot: TelegramBotActions) {
+    private suspend fun addFact(factText: String, update: UpdateContext) {
         if (factText.isBlank()) {
-            bot.sendMessage("Fact cannot be blank.")
+            sendMessage { FACT_BLANK }.send(update.chatId, update.bot)
             return
         }
-        saveFact(chat, factText)
-        bot.sendMessage(FACT_ADDED)
+        saveFact(update.chat, factText)
+        sendMessage { FACT_ADDED }.send(update.chatId, update.bot)
     }
 
     private fun saveFact(chat: Chat, factText: String) {
@@ -43,10 +46,12 @@ class FactService(
         chatRepository.save(chat)
     }
 
-    suspend fun provideRandomFact(bot: TelegramBotActions) {
-        when (val randomFact = getRandomFact()) {
-            null -> bot.sendMessage(NO_FACTS)
-            else -> respondWithFact(bot, randomFact)
+    suspend fun provideRandomFact(update: UpdateContext) {
+        val randomFact = getRandomFact()
+        if (randomFact == null) {
+            sendMessage { NO_FACTS }.send(update.chatId, update.bot)
+        } else {
+            respondWithFact(randomFact, update)
         }
     }
 
@@ -58,12 +63,16 @@ class FactService(
             ?.comment
     }
 
-    private suspend fun respondWithFact(bot: TelegramBotActions, fact: String) {
+    private suspend fun respondWithFact(fact: String, update: UpdateContext) {
         val audioFile = ttsService.generateAudioFile(fact)
         if (audioFile != null) {
-            bot.sendAudio(audioFile, fact)
+            sendAudio { audioFile.absolutePath }
+                .options { parseMode = ParseMode.Markdown }
+                .send(update.chatId, update.bot)
         } else {
-            bot.sendMessage(fact)
+            sendMessage { fact }
+                .options { parseMode = ParseMode.Markdown }
+                .send(update.chatId, update.bot)
         }
     }
 }

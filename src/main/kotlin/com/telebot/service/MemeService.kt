@@ -10,6 +10,7 @@ import com.telebot.util.PrinterUtil
 import eu.vendeli.tgbot.api.media.sendMediaGroup
 import eu.vendeli.tgbot.api.message.sendMessage
 import eu.vendeli.tgbot.types.ParseMode
+import eu.vendeli.tgbot.types.internal.ImplicitFile
 import eu.vendeli.tgbot.types.media.InputMedia
 import org.springframework.stereotype.Service
 
@@ -78,7 +79,7 @@ class MemeService(
             return
         }
 
-        val count = update.args.getOrNull(3)?.toIntOrNull() ?: 1
+        val count = update.args.getOrNull(2)?.toIntOrNull() ?: 1
         val memes = fetchRedditMemes(subreddit, count)
         if (memes.isEmpty()) {
             sendMessage { NO_MEMES_FOUND }.send(update.chatId, update.bot)
@@ -87,35 +88,36 @@ class MemeService(
 
         val mediaGroup = memes.mapNotNull { createMedia(it, subreddit) }
         sendMediaGroup(mediaGroup).send(update.chatId, update.bot)
+
         mediaUtil.deleteTempFiles()
     }
+
 
     private fun isValidSubreddit(subreddit: String): Boolean {
         return redditClient.getRedditMemes(subreddit, 1).memes.isNotEmpty()
     }
 
     private fun fetchRedditMemes(subreddit: String, count: Int): List<RedditResponseDTO.RedditPostDTO> {
-        return redditClient.getRedditMemes(subreddit, count).memes.map { post ->
-            if (post.url?.endsWith(".gif", true) == true) {
-                post.copy(url = mediaUtil.convertGifToMp4(post.url!!))
-            } else post
-        }
+        return redditClient.getRedditMemes(subreddit, count).memes
     }
 
-    private fun createMedia(
-        post: RedditResponseDTO.RedditPostDTO, subreddit: String
+    private suspend fun createMedia(
+        post: RedditResponseDTO.RedditPostDTO,
+        subreddit: String
     ): InputMedia? {
         val caption = "r/$subreddit\n${post.title} by ${post.author}"
         val url = post.url ?: return null
 
         return when {
-            url.endsWith(".mp4", true) -> InputMedia.Video(media = url, caption = caption)
-            url.endsWith(".jpg", true) || url.endsWith(".jpeg", true) || url.endsWith(".png", true) -> InputMedia.Photo(
-                media = url,
-                caption = caption
-            )
+            url.endsWith(".gif", true) -> {
+                val localFilePath = mediaUtil.convertGifToMp4(url) ?: return null
+                InputMedia.Video(media = ImplicitFile.Str(localFilePath), caption = caption)
+            }
 
+            url.endsWith(".jpg", true) || url.endsWith(".jpeg", true) || url.endsWith(".png", true) ->
+                InputMedia.Photo(media = url, caption = caption)
             else -> null
         }
     }
+
 }

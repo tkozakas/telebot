@@ -7,7 +7,9 @@ import com.telebot.model.Subreddit
 import com.telebot.model.UpdateContext
 import com.telebot.util.MediaUtil
 import com.telebot.util.PrinterUtil
+import eu.vendeli.tgbot.api.media.sendAnimation
 import eu.vendeli.tgbot.api.media.sendMediaGroup
+import eu.vendeli.tgbot.api.media.sendPhoto
 import eu.vendeli.tgbot.api.message.sendMessage
 import eu.vendeli.tgbot.types.ParseMode
 import eu.vendeli.tgbot.types.internal.ImplicitFile
@@ -86,38 +88,72 @@ class MemeService(
             return
         }
 
-        val mediaGroup = memes.mapNotNull { createMedia(it, subreddit) }
-        sendMediaGroup(mediaGroup).send(update.chatId, update.bot)
+        if (memes.size == 1) {
+            sendSingleMeme(memes.first(), subreddit, update)
+            mediaUtil.deleteTempFiles()
+            return
+        }
+
+        val mediaGroup = memes.mapNotNull { buildMediaGroupEntry(it, subreddit) }
+        if (mediaGroup.isEmpty()) {
+            sendMessage { "No suitable photos to display from the fetched memes." }.send(update.chatId, update.bot)
+        } else {
+            sendMediaGroup(mediaGroup).send(update.chatId, update.bot)
+        }
 
         mediaUtil.deleteTempFiles()
     }
 
+    private suspend fun sendSingleMeme(
+        meme: RedditResponseDTO.RedditPostDTO,
+        subreddit: String,
+        update: UpdateContext
+    ) {
+        val url = meme.url ?: run {
+            sendMessage { NO_MEMES_FOUND }.send(update.chatId, update.bot)
+            return
+        }
+
+        val caption = "r/$subreddit\n${meme.title} by ${meme.author}"
+        when {
+            isPhoto(url) -> {
+                sendPhoto(ImplicitFile.Str(url))
+                    .caption { caption }
+                    .send(update.chatId, update.bot)
+            }
+
+            url.endsWith(".gif", true) -> {
+                sendAnimation(ImplicitFile.Str(url))
+                    .caption { caption }
+                    .send(update.chatId, update.bot)
+            }
+
+            else -> sendMessage { "Unsupported media type." }.send(update.chatId, update.bot)
+        }
+    }
+
+    private fun buildMediaGroupEntry(
+        post: RedditResponseDTO.RedditPostDTO,
+        subreddit: String
+    ): InputMedia? {
+        val url = post.url ?: return null
+        if (isPhoto(url)) {
+            val caption = "r/$subreddit\n${post.title} by ${post.author}"
+            return InputMedia.Photo(media = url, caption = caption)
+        }
+        return null
+    }
+
+    private fun isPhoto(url: String): Boolean {
+        return url.endsWith(".jpg", true) || url.endsWith(".jpeg", true) || url.endsWith(".png", true)
+    }
 
     private fun isValidSubreddit(subreddit: String): Boolean {
         return redditClient.getRedditMemes(subreddit, 1).memes.isNotEmpty()
     }
 
-    private fun fetchRedditMemes(subreddit: String, count: Int): List<RedditResponseDTO.RedditPostDTO> {
+    private suspend fun fetchRedditMemes(subreddit: String, count: Int): List<RedditResponseDTO.RedditPostDTO> {
         return redditClient.getRedditMemes(subreddit, count).memes
-    }
-
-    private suspend fun createMedia(
-        post: RedditResponseDTO.RedditPostDTO,
-        subreddit: String
-    ): InputMedia? {
-        val caption = "r/$subreddit\n${post.title} by ${post.author}"
-        val url = post.url ?: return null
-
-        return when {
-            url.endsWith(".gif", true) -> {
-                val localFilePath = mediaUtil.convertGifToMp4(url) ?: return null
-                InputMedia.Video(media = ImplicitFile.Str(localFilePath), caption = caption)
-            }
-
-            url.endsWith(".jpg", true) || url.endsWith(".jpeg", true) || url.endsWith(".png", true) ->
-                InputMedia.Photo(media = url, caption = caption)
-            else -> null
-        }
     }
 
 }

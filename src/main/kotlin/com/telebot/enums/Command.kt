@@ -16,7 +16,7 @@ sealed class Command(
         const val STICKER = "${PREFIX}sticker"
         const val FACT = "${PREFIX}fact"
         const val TTS = "${PREFIX}tts"
-        const val DAILY_MESSAGE = "${PREFIX}daily_message"
+        const val DAILY_MESSAGE = "${PREFIX}pidor" // TODO rename
 
         fun values() = listOf(Help, Start, Gpt, Meme, Sticker, Fact, Tts, DailyMessage)
         fun isCommand(text: String): Boolean {

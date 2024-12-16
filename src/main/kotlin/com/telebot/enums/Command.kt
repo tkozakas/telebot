@@ -1,5 +1,18 @@
 package com.telebot.enums
 
+object Commands {
+    private const val PREFIX = "/"
+
+    const val GPT = "${PREFIX}gpt"
+    const val MEME = "${PREFIX}meme"
+    const val STICKER = "${PREFIX}sticker"
+    const val FACT = "${PREFIX}fact"
+    const val TTS = "${PREFIX}tts"
+    const val DAILY_MESSAGE = "${PREFIX}pidor" // TODO take from env somehow
+    const val HELP = "${PREFIX}help"
+    const val START = "${PREFIX}start"
+}
+
 sealed class Command(
     val command: String,
     val description: String,
@@ -7,44 +20,32 @@ sealed class Command(
     val subCommands: List<SubCommand> = emptyList()
 ) {
     companion object {
-        private const val PREFIX = "/"
-
-        const val HELP = "${PREFIX}help"
-        const val START = "${PREFIX}start"
-        const val GPT = "${PREFIX}gpt"
-        const val MEME = "${PREFIX}meme"
-        const val STICKER = "${PREFIX}sticker"
-        const val FACT = "${PREFIX}fact"
-        const val TTS = "${PREFIX}tts"
-        const val DAILY_MESSAGE = "${PREFIX}pidor" // TODO rename
-
         fun values() = listOf(Help, Start, Gpt, Meme, Sticker, Fact, Tts, DailyMessage)
         fun isCommand(text: String): Boolean {
             return values().any { text.startsWith(it.command) }
         }
-
     }
 
-    data object Help : Command(HELP, "Displays this help message", true)
-    data object Start : Command(START, "Starts the bot", true)
+    data object Help : Command(Commands.HELP, "Displays this help message", true)
+    data object Start : Command(Commands.START, "Starts the bot", true)
     data object Gpt :
-        Command(GPT, "Interact with the GPT model", subCommands = listOf(SubCommand.MEMORY, SubCommand.FORGET))
+        Command(Commands.GPT, "Interact with the GPT model", subCommands = listOf(SubCommand.MEMORY, SubCommand.FORGET))
 
     data object Meme :
-        Command(MEME, "Manage memes", subCommands = listOf(SubCommand.LIST, SubCommand.ADD, SubCommand.REMOVE))
+        Command(Commands.MEME, "Manage memes", subCommands = listOf(SubCommand.LIST, SubCommand.ADD, SubCommand.REMOVE))
 
     data object Sticker :
-        Command(STICKER, "Manage stickers", subCommands = listOf(SubCommand.LIST, SubCommand.ADD, SubCommand.REMOVE))
+        Command(Commands.STICKER, "Manage stickers", subCommands = listOf(SubCommand.LIST, SubCommand.ADD, SubCommand.REMOVE))
 
     data object Fact :
-        Command(FACT, "Add or manage facts", subCommands = listOf(SubCommand.ADD))
+        Command(Commands.FACT, "Add or manage facts", subCommands = listOf(SubCommand.ADD))
 
     data object Tts :
-        Command(TTS, "Text-to-speech")
+        Command(Commands.TTS, "Text-to-speech")
 
     data object DailyMessage :
         Command(
-            DAILY_MESSAGE,
+            Commands.DAILY_MESSAGE,
             "Daily message",
             subCommands = listOf(SubCommand.REGISTER, SubCommand.ALL, SubCommand.STATS)
         )

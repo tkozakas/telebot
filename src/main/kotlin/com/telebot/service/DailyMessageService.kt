@@ -171,4 +171,8 @@ class DailyMessageService(
         }
         chatService.saveAll(chats)
     }
+
+    suspend fun sendScheduledDailyMessage(userContext: UpdateContext) {
+        chooseRandomWinner(userContext)
+    }
 }

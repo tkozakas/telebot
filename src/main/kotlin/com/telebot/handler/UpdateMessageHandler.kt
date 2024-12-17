@@ -26,7 +26,7 @@ class UpdateMessageHandler(
     private val dailyMessageService: DailyMessageService,
     private val updateContextFactory: UpdateContextFactory,
     private val chatService: ChatService,
-    private val bot: TelegramBot
+    private val telegramBot: TelegramBot
 ) {
     private val logger = LoggerFactory.getLogger(UpdateMessageHandler::class.java)
     private fun shouldTriggerRandomResponse() = Random.nextDouble() < randomResponseChance
@@ -52,7 +52,7 @@ class UpdateMessageHandler(
         val chats = chatService.findAll()
         chats.forEach { chat ->
             GlobalScope.launch {
-                dailyMessageService.sendScheduledDailyMessage(updateContextFactory.create(chat, bot))
+                dailyMessageService.sendScheduledDailyMessage(updateContextFactory.create(chat, telegramBot))
             }
         }
     }

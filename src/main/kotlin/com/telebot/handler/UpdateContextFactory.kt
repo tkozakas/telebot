@@ -31,7 +31,7 @@ class UpdateContextFactory(
 
     fun create(chat: Chat, bot: TelegramBot): UpdateContext {
         return UpdateContext(
-            chatId = chat.id ?: 0,
+            chatId = chat.telegramChatId ?: 0,
             userId = 0,
             username = "",
             args = emptyList(),

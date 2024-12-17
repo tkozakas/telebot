@@ -6,6 +6,8 @@ import com.telebot.model.UpdateContext
 import com.telebot.properties.TtsProperties
 import eu.vendeli.tgbot.api.media.sendAudio
 import eu.vendeli.tgbot.api.message.sendMessage
+import eu.vendeli.tgbot.types.internal.ImplicitFile
+import eu.vendeli.tgbot.types.internal.InputFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.springframework.stereotype.Service
@@ -31,11 +33,13 @@ class TtsService(
         if (tempAudioFile == null) {
             sendMessage { NO_RESPONSE_MESSAGE }.send(update.chatId, update.bot)
         } else {
-            sendAudio { tempAudioFile.absolutePath }.send(update.chatId, update.bot)
+            sendAudio(ImplicitFile.InpFile(tempAudioFile))
+                .caption { messageText }
+                .send(update.chatId, update.bot)
         }
     }
 
-    suspend fun generateAudioFile(messageText: String): File? {
+    suspend fun generateAudioFile(messageText: String): InputFile? {
         val request = TtsRequestDTO(
             text = messageText,
             modelId = ttsProperties.modelId,
@@ -51,11 +55,12 @@ class TtsService(
             val audioBytes = ttsClient.generateSpeech(apiKey, ttsProperties.voiceId, request)
 
             if (audioBytes != null) {
-                return withContext(Dispatchers.IO) {
+                val file = withContext(Dispatchers.IO) {
                     File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_EXTENSION)
                 }.apply {
                     Files.write(toPath(), audioBytes)
                 }
+                return InputFile(file.readBytes())
             }
         }
 

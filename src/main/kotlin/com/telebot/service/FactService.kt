@@ -8,6 +8,7 @@ import com.telebot.repository.ChatRepository
 import eu.vendeli.tgbot.api.media.sendAudio
 import eu.vendeli.tgbot.api.message.sendMessage
 import eu.vendeli.tgbot.types.ParseMode
+import eu.vendeli.tgbot.types.internal.ImplicitFile
 import org.springframework.stereotype.Service
 
 @Service
@@ -66,8 +67,9 @@ class FactService(
     private suspend fun respondWithFact(fact: String, update: UpdateContext) {
         val audioFile = ttsService.generateAudioFile(fact)
         if (audioFile != null) {
-            sendAudio { audioFile.absolutePath }
+            sendAudio (ImplicitFile.InpFile(audioFile))
                 .options { parseMode = ParseMode.Markdown }
+                .caption { fact }
                 .send(update.chatId, update.bot)
         } else {
             sendMessage { fact }

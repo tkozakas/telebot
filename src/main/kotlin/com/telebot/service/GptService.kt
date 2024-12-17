@@ -7,8 +7,11 @@ import com.telebot.model.UpdateContext
 import com.telebot.properties.GptProperties
 import eu.vendeli.tgbot.api.media.sendDocument
 import eu.vendeli.tgbot.api.message.sendMessage
+import eu.vendeli.tgbot.types.internal.ImplicitFile
+import eu.vendeli.tgbot.types.internal.InputFile
 import org.springframework.stereotype.Service
 import kotlin.io.path.createTempFile
+import kotlin.io.path.readBytes
 import kotlin.io.path.writeText
 
 @Service
@@ -40,7 +43,8 @@ class GptService(
         if (historyFile == null) {
             sendMessage { CHAT_HISTORY_EMPTY }.send(update.chatId, update.bot)
         } else {
-            sendDocument { historyFile.toFile().absolutePath }
+            sendDocument(ImplicitFile.InpFile(historyFile))
+                .caption { "Chat history" }
                 .send(update.chatId, update.bot)
         }
     }
@@ -75,8 +79,8 @@ class GptService(
 
     private fun generateChatHistory(chatId: Long) =
         gptMessageStorageService.getMessages(chatId).takeIf { it.isNotEmpty() }?.let {
-            createTempFile(prefix = "chat_history_", suffix = ".txt").apply {
+            InputFile(createTempFile(prefix = "chat_history_", suffix = ".txt").apply {
                 writeText(it.joinToString("\n") { msg -> "${msg.role}: ${msg.content}" })
-            }
+            }.readBytes())
         }
 }

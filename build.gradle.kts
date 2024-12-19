@@ -40,6 +40,7 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
     implementation("com.arthenica:ffmpeg-kit-full-gpl:4.5.1-1")
+    implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j:3.0.4")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

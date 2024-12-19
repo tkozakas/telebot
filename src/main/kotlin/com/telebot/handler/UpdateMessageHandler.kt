@@ -35,14 +35,18 @@ class UpdateMessageHandler(
 
     @UpdateHandler([UpdateType.MESSAGE])
     suspend fun handleUpdate(update: ProcessedUpdate, bot: TelegramBot) {
-        val context = updateContextFactory.create(update, bot)
-        logger.info("Message received from chat: ${update.text}")
+        try {
+            val context = updateContextFactory.create(update, bot)
+            logger.info("Message received from chat: ${update.text}")
 
-        if (Command.isCommand(update.text) || !shouldTriggerRandomResponse()) return
+            if (Command.isCommand(update.text) || !shouldTriggerRandomResponse()) return
 
-        when (val handler = selectRandomHandler()) {
-            is FactService -> handler.provideRandomFact(context)
-            is StickerService -> handler.sendRandomSticker(context)
+            when (val handler = selectRandomHandler()) {
+                is FactService -> handler.provideRandomFact(context)
+                is StickerService -> handler.sendRandomSticker(context)
+            }
+        } catch (e: Exception) {
+            logger.warn("Failed to handle update: ${update.updateId}. Reason: ${e.message}", e)
         }
     }
 

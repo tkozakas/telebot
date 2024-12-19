@@ -14,6 +14,7 @@ import eu.vendeli.tgbot.api.message.sendMessage
 import eu.vendeli.tgbot.types.ParseMode
 import eu.vendeli.tgbot.types.internal.ImplicitFile
 import eu.vendeli.tgbot.types.media.InputMedia
+import feign.FeignException
 import org.springframework.stereotype.Service
 
 @Service
@@ -153,7 +154,12 @@ class MemeService(
     }
 
     private suspend fun fetchRedditMemes(subreddit: String, count: Int): List<RedditResponseDTO.RedditPostDTO> {
-        return redditClient.getRedditMemes(subreddit, count).memes
+        return try {
+            redditClient.getRedditMemes(subreddit, count).memes
+        } catch (e: FeignException) {
+            print("Caught FeignException: ${e.message}")
+            emptyList()
+        }
     }
 
 }

@@ -6,6 +6,7 @@ import com.telebot.service.DailyMessageService
 import com.telebot.service.FactService
 import com.telebot.service.StickerService
 import eu.vendeli.tgbot.TelegramBot
+import eu.vendeli.tgbot.annotations.UnprocessedHandler
 import eu.vendeli.tgbot.annotations.UpdateHandler
 import eu.vendeli.tgbot.types.internal.ProcessedUpdate
 import eu.vendeli.tgbot.types.internal.UpdateType
@@ -33,7 +34,7 @@ class UpdateMessageHandler(
 
     private fun selectRandomHandler() = listOf(factService, stickerService).random()
 
-    @UpdateHandler([UpdateType.MESSAGE, UpdateType.CALLBACK_QUERY, UpdateType.INLINE_QUERY, UpdateType.CHANNEL_POST])
+    @UpdateHandler([UpdateType.MESSAGE])
     suspend fun handleUpdate(update: ProcessedUpdate, bot: TelegramBot) {
         try {
             val context = updateContextFactory.create(update, bot)
@@ -48,6 +49,11 @@ class UpdateMessageHandler(
         } catch (e: Exception) {
             logger.warn("Failed to handle update: ${update.updateId}. Reason: ${e.message}", e)
         }
+    }
+
+    @UnprocessedHandler
+    suspend fun handleUnprocessed(update: ProcessedUpdate, bot: TelegramBot) {
+        logger.info("Unprocessed update received: ${update.text}")
     }
 
     @OptIn(DelicateCoroutinesApi::class)

@@ -33,7 +33,7 @@ class UpdateMessageHandler(
 
     private fun selectRandomHandler() = listOf(factService, stickerService).random()
 
-    @UpdateHandler([UpdateType.MESSAGE])
+    @UpdateHandler([UpdateType.MESSAGE, UpdateType.CALLBACK_QUERY, UpdateType.INLINE_QUERY, UpdateType.CHANNEL_POST])
     suspend fun handleUpdate(update: ProcessedUpdate, bot: TelegramBot) {
         try {
             val context = updateContextFactory.create(update, bot)

@@ -16,8 +16,8 @@ class UpdateContextFactory(
             update.origin.message?.chat?.id ?: 0,
             update.origin.message?.chat?.title
         )
-        val args = update.text.split(" ")
-        val subCommand = args.getOrNull(1)
+        val args = update.text.drop(1).split(" ")
+        val subCommand = args.getOrNull(0)
         return UpdateContext(
             chatId = chat.telegramChatId ?: 0,
             userId = update.origin.message?.from?.id ?: 0,

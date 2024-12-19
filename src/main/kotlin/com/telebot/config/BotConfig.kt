@@ -28,6 +28,11 @@ class BotConfig(
             processingDispatcher = Dispatchers.Unconfined
             pullingDelay = 1000L
         }
+        commandParsing {
+            commandDelimiter = '/'
+            commandDelimiter = ' '
+            restrictSpacesInCommands = true
+        }
         setMyCommands {
             Command.values().forEach{ command ->
                 if (command.listExcluded) return@forEach

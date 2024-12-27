@@ -70,6 +70,20 @@ class UpdateMessageHandler(
         }
     }
 
+    @Scheduled(cron = "\${schedule.year-end-message}")
+    fun sendYearEndMessage() {
+        val chats = chatService.findAll()
+        chats.forEach { chat ->
+            try {
+                CoroutineScope(Dispatchers.IO).launch {
+                    dailyMessageService.sendYearEndMessage(updateContextFactory.create(chat, telegramBot))
+                }
+            } catch (e: Exception) {
+                logger.error("Failed to send year end message to chat: ${chat.id}. Reason: ${e.message}", e)
+            }
+        }
+    }
+
     @Scheduled(cron = "\${schedule.winner-reset}")
     fun resetWinner() {
         dailyMessageService.resetWinners()

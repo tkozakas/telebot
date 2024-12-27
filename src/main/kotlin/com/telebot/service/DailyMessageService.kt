@@ -19,7 +19,8 @@ class DailyMessageService(
     private val sentenceRepository: SentenceRepository,
     private val dailyMessageTemplate: DailyMessageTemplate,
     private val printerUtil: PrinterUtil,
-    private val chatService: ChatService
+    private val chatService: ChatService,
+    private val stickerService: StickerService
 ) : CommandService {
 
     companion object {
@@ -174,5 +175,22 @@ class DailyMessageService(
 
     suspend fun sendScheduledDailyMessage(userContext: UpdateContext) {
         chooseRandomWinner(userContext)
+    }
+
+    suspend fun sendYearEndMessage(update: UpdateContext) {
+        val year = CURRENT_YEAR
+        val stats = aggregateStats(update.chat.stats.filter { it.year == year })
+        val winnerOfTheYear = stats.maxByOrNull { it.value.score ?: 0L }?.value
+        sendMessage {
+            dailyMessageTemplate.yearEndMessage.format(
+                dailyMessageTemplate.alias,
+                year,
+                winnerOfTheYear?.username,
+                winnerOfTheYear?.score
+            )
+        }
+            .options { parseMode = ParseMode.Markdown }
+            .send(update.chatId, update.bot)
+        stickerService.sendRandomSticker(update)
     }
 }

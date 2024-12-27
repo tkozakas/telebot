@@ -14,4 +14,5 @@ data class DailyMessageTemplate(
     val winnerExists: String,
     val userAlreadyRegistered: String,
     val userRegistered: String,
+    val yearEndMessage: String
 )

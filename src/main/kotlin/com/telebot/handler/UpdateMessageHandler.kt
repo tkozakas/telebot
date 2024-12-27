@@ -1,17 +1,17 @@
 package com.telebot.handler
 
 import com.telebot.enums.Command
+import com.telebot.model.UpdateContext
 import com.telebot.service.ChatService
 import com.telebot.service.DailyMessageService
 import com.telebot.service.FactService
 import com.telebot.service.StickerService
 import eu.vendeli.tgbot.TelegramBot
-import eu.vendeli.tgbot.annotations.UnprocessedHandler
 import eu.vendeli.tgbot.annotations.UpdateHandler
 import eu.vendeli.tgbot.types.internal.ProcessedUpdate
 import eu.vendeli.tgbot.types.internal.UpdateType
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -42,27 +42,30 @@ class UpdateMessageHandler(
 
             if (Command.isCommand(update.text) || !shouldTriggerRandomResponse()) return
 
-            when (val handler = selectRandomHandler()) {
-                is FactService -> handler.provideRandomFact(context)
-                is StickerService -> handler.sendRandomSticker(context)
-            }
+            triggerRandomResponse(context)
+        } catch (e: IllegalStateException) {
+            logger.error("Serialization failed for update ${update.updateId}: ${e.message}", e)
         } catch (e: Exception) {
             logger.warn("Failed to handle update: ${update.updateId}. Reason: ${e.message}", e)
         }
     }
 
-    @UnprocessedHandler
-    suspend fun handleUnprocessed(update: ProcessedUpdate, bot: TelegramBot) {
-        logger.info("Unprocessed update received: ${update.text}")
+    private suspend fun triggerRandomResponse(context: UpdateContext) {
+        when (val handler = selectRandomHandler()) {
+            is StickerService -> handler.sendRandomSticker(context)
+        }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     @Scheduled(cron = "\${schedule.daily-message}")
     fun sendDailyMessage() {
         val chats = chatService.findAll()
         chats.forEach { chat ->
-            GlobalScope.launch {
-                dailyMessageService.sendScheduledDailyMessage(updateContextFactory.create(chat, telegramBot))
+            try {
+                CoroutineScope(Dispatchers.IO).launch {
+                    dailyMessageService.sendScheduledDailyMessage(updateContextFactory.create(chat, telegramBot))
+                }
+            } catch (e: Exception) {
+                logger.error("Failed to send daily message to chat: ${chat.id}. Reason: ${e.message}", e)
             }
         }
     }

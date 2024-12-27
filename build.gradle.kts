@@ -6,6 +6,7 @@ plugins {
     kotlin("plugin.jpa") version "2.1.0"
     kotlin("jvm") version "1.9.25"
     kotlin("plugin.spring") version "1.9.25"
+    kotlin("plugin.serialization") version "1.8.21"
     id("org.springframework.boot") version "3.3.0"
     id("io.spring.dependency-management") version "1.1.6"
     id("com.google.devtools.ksp") version "2.1.0-1.0.29"
@@ -37,6 +38,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.postgresql:postgresql:42.7.4")
 
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
     implementation("com.arthenica:ffmpeg-kit-full-gpl:4.5.1-1")

@@ -13,7 +13,7 @@ media:
   output-dir: "${TMP_DIR:tmp}"
 
 ktgram:
-  username: # <<your_username>> not mandatory
+  username: # <<your_username>>
   bot:
     - token: # <<your_token>>
 

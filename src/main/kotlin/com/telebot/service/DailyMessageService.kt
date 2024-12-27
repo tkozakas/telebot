@@ -122,7 +122,7 @@ class DailyMessageService(
 
         val currentWinner = stats.find { it.isWinner == true && it.year == CURRENT_YEAR }
         if (currentWinner != null) {
-            val mentionedUser = "[${currentWinner.username}](tg://user?id=${currentWinner.userId})"
+            val mentionedUser = formatUsername(currentWinner)
             sendMessage { dailyMessageTemplate.winnerExists.format(dailyMessageTemplate.alias, mentionedUser) }
                 .options { parseMode = ParseMode.Markdown }
                 .send(update.chatId, update.bot)
@@ -137,7 +137,7 @@ class DailyMessageService(
 
     private suspend fun sendWinnerMessages(sentences: List<Sentence>, winner: Stat, update: UpdateContext) {
         if (sentences.isEmpty()) {
-            val mentionedUser = "[${winner.username}](tg://user?id=${winner.userId})"
+            val mentionedUser = formatUsername(winner)
             sendMessage { dailyMessageTemplate.winnerExists.format(dailyMessageTemplate.alias, mentionedUser) }
                 .options { parseMode = ParseMode.Markdown }
                 .send(update.chatId, update.bot)
@@ -145,7 +145,7 @@ class DailyMessageService(
         }
         sentences.sortedBy { it.orderNumber }.forEach { sentence ->
             delay(RANDOM_DELAY_RANGE.random())
-            val mentionedUser = "[${winner.username}](tg://user?id=${winner.userId})"
+            val mentionedUser = formatUsername(winner)
             sentence.text?.format(dailyMessageTemplate.alias, mentionedUser)?.let {
                 sendMessage { it }.options { parseMode = ParseMode.Markdown }.send(update.chatId, update.bot)
             }
@@ -173,6 +173,10 @@ class DailyMessageService(
         chatService.saveAll(chats)
     }
 
+    fun formatUsername(stat: Stat?): String {
+        return "[${stat?.username}](tg://user?id=${ stat?.userId})"
+    }
+
     suspend fun sendScheduledDailyMessage(userContext: UpdateContext) {
         chooseRandomWinner(userContext)
     }
@@ -185,7 +189,7 @@ class DailyMessageService(
             dailyMessageTemplate.yearEndMessage.format(
                 dailyMessageTemplate.alias,
                 year,
-                winnerOfTheYear?.username,
+                formatUsername(winnerOfTheYear),
                 winnerOfTheYear?.score
             )
         }

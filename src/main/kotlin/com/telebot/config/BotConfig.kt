@@ -39,10 +39,5 @@ class BotConfig(
                 botCommand(command.command, command.description)
             }
         }
-        kotlinx.serialization.json.Json {
-            ignoreUnknownKeys = true
-            explicitNulls = false
-            classDiscriminator = "_type"
-        }
     }
 }

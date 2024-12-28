@@ -29,7 +29,7 @@ repositories {
 }
 
 dependencies {
-    implementation("eu.vendeli:spring-ktgram-starter:7.6.0")
+    implementation("eu.vendeli:spring-ktgram-starter:7.6.2")
 
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.1.4")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")

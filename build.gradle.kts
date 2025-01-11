@@ -10,7 +10,7 @@ plugins {
     id("org.springframework.boot") version "3.3.0"
     id("io.spring.dependency-management") version "1.1.6"
     id("com.google.devtools.ksp") version "2.1.0-1.0.29"
-    id("eu.vendeli.telegram-bot") version "7.6.0"
+    id("eu.vendeli.telegram-bot") version "7.8.0"
 }
 
 group = "com.telebot"
@@ -29,7 +29,7 @@ repositories {
 }
 
 dependencies {
-    implementation("eu.vendeli:spring-ktgram-starter:7.6.2")
+    implementation("eu.vendeli:spring-ktgram-starter:7.8.0")
 
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.1.4")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -38,7 +38,6 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.postgresql:postgresql:42.7.4")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
     implementation("com.arthenica:ffmpeg-kit-full-gpl:4.5.1-1")

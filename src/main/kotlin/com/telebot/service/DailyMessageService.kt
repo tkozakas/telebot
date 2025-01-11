@@ -114,6 +114,8 @@ class DailyMessageService(
     }
 
     suspend fun chooseRandomWinner(update: UpdateContext) {
+        initializeStatsForNewYear(update.chat)
+
         val stats = update.chat.stats
         if (stats.isEmpty()) {
             sendMessage { dailyMessageTemplate.noStats }.send(update.chatId, update.bot)

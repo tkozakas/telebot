@@ -196,5 +196,25 @@ class DailyMessageService(
             .options { parseMode = ParseMode.Markdown }
             .send(update.chatId, update.bot)
         stickerService.sendRandomSticker(update)
+        initializeStatsForNewYear(update.chat)
+    }
+
+    private fun initializeStatsForNewYear(chat: Chat) {
+        val existingYears = chat.stats.map { it.year }.toSet()
+        if (!existingYears.contains(CURRENT_YEAR)) {
+            chat.stats.forEach { stat ->
+                chat.stats.add(
+                    Stat(
+                        chat = chat,
+                        userId = stat.userId,
+                        username = stat.username,
+                        year = CURRENT_YEAR,
+                        score = 0,
+                        isWinner = false
+                    )
+                )
+            }
+            chatService.save(chat)
+        }
     }
 }

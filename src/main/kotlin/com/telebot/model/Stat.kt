@@ -15,19 +15,13 @@ open class Stat(
     @JoinColumn(name = "chat_id")
     open var chat: Chat? = null,
 
-    @Column(name = "user_id", nullable = false)
-    open var userId: Long? = null,
-
-    @Column(name = "username")
-    open var username: String? = null,
-
-    @Column(name = "is_winner")
-    open var isWinner: Boolean? = null,
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    open var user: User,
 
     @Column(name = "score")
     open var score: Long? = null,
 
     @Column(name = "year")
     open var year: Int? = null,
-
 )

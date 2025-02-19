@@ -1,12 +1,10 @@
 package com.telebot.service
 
 import com.telebot.enums.SubCommand
-import com.telebot.model.Chat
-import com.telebot.model.Sentence
-import com.telebot.model.Stat
-import com.telebot.model.UpdateContext
+import com.telebot.model.*
 import com.telebot.properties.DailyMessageTemplate
 import com.telebot.repository.SentenceRepository
+import com.telebot.repository.UserRepository
 import com.telebot.util.PrinterUtil
 import eu.vendeli.tgbot.api.message.sendMessage
 import eu.vendeli.tgbot.types.ParseMode
@@ -20,7 +18,7 @@ class DailyMessageService(
     private val dailyMessageTemplate: DailyMessageTemplate,
     private val printerUtil: PrinterUtil,
     private val chatService: ChatService,
-    private val stickerService: StickerService
+    private val userRepository: UserRepository
 ) : CommandService {
 
     companion object {
@@ -30,7 +28,6 @@ class DailyMessageService(
 
     override suspend fun handle(update: UpdateContext) {
         val year = update.args.getOrNull(2)?.toIntOrNull() ?: CURRENT_YEAR
-
         when (update.subCommand?.lowercase()) {
             null -> chooseRandomWinner(update)
             SubCommand.REGISTER.name.lowercase() -> registerUser(update)
@@ -41,23 +38,27 @@ class DailyMessageService(
     }
 
     private suspend fun registerUser(update: UpdateContext) {
-        if (update.chat.stats.any { it.userId == update.userId }) {
-            sendMessage { dailyMessageTemplate.userAlreadyRegistered }.send(update.chatId, update.bot)
+        if (update.chat.stats.any { it.user.id == update.userId }) {
+            sendMessage { dailyMessageTemplate.userAlreadyRegistered }
+                .send(update.chatId, update.bot)
             return
         }
         saveUser(update.chat, update.userId, update.username)
-        sendMessage { dailyMessageTemplate.userRegistered.format(update.username) }.send(update.chatId, update.bot)
+        sendMessage { dailyMessageTemplate.userRegistered.format(update.username) }
+            .send(update.chatId, update.bot)
     }
 
     private fun saveUser(chat: Chat, userId: Long, username: String) {
+        val user = userRepository.findById(userId).orElseGet {
+            User(id = userId, username = username, isWinner = false)
+                .also { userRepository.save(it) }
+        }
         chat.stats.add(
             Stat(
                 chat = chat,
-                userId = userId,
-                username = username,
+                user = user,
                 year = CURRENT_YEAR,
-                score = 0,
-                isWinner = false
+                score = 0
             )
         )
         chatService.save(chat)
@@ -78,6 +79,20 @@ class DailyMessageService(
         sendStatsMessage(stats, CURRENT_YEAR, dailyMessageTemplate.statsHeader, update)
     }
 
+    private fun aggregateStats(stats: Collection<Stat>): Map<Long, Stat> {
+        return stats.groupBy { it.user.id }
+            .map { (userId, userStats) ->
+                val firstStat = userStats.first()
+                userId to Stat(
+                    chat = firstStat.chat,
+                    user = firstStat.user,
+                    score = userStats.sumOf { it.score ?: 0L },
+                    year = firstStat.year
+                )
+            }
+            .toMap()
+    }
+
     private suspend fun sendStatsMessage(
         stats: Map<Long, Stat>,
         year: Int,
@@ -85,7 +100,8 @@ class DailyMessageService(
         update: UpdateContext
     ) {
         if (stats.isEmpty()) {
-            sendMessage { dailyMessageTemplate.noStats }.send(update.chatId, update.bot)
+            sendMessage { dailyMessageTemplate.noStats }
+                .send(update.chatId, update.bot)
             return
         }
         val message = printerUtil.printStats(
@@ -95,34 +111,20 @@ class DailyMessageService(
             footer = dailyMessageTemplate.statsFooter.format(stats.size),
             bodyTemplate = dailyMessageTemplate.userStats
         )
-        sendMessage { message }.options { parseMode = ParseMode.Markdown }.send(update.chatId, update.bot)
-    }
-
-    private fun aggregateStats(stats: Collection<Stat>): Map<Long, Stat> {
-        return stats.groupBy { it.userId }.mapNotNull { (userId, userStats) ->
-            userId?.let {
-                it to Stat(
-                    userId = it,
-                    username = userStats.firstOrNull()?.username,
-                    chat = userStats.firstOrNull()?.chat,
-                    score = userStats.sumOf { stat -> stat.score ?: 0L },
-                    year = userStats.firstOrNull()?.year,
-                    isWinner = userStats.firstOrNull()?.isWinner
-                )
-            }
-        }.toMap()
+        sendMessage { message }
+            .options { parseMode = ParseMode.Markdown }
+            .send(update.chatId, update.bot)
     }
 
     suspend fun chooseRandomWinner(update: UpdateContext) {
-        initializeStatsForNewYear(update.chat)
-
         val stats = update.chat.stats
         if (stats.isEmpty()) {
-            sendMessage { dailyMessageTemplate.noStats }.send(update.chatId, update.bot)
+            sendMessage { dailyMessageTemplate.noStats }
+                .send(update.chatId, update.bot)
             return
         }
 
-        val currentWinner = stats.find { it.isWinner == true && it.year == CURRENT_YEAR }
+        val currentWinner = stats.find { it.user.isWinner == true && it.year == CURRENT_YEAR }
         if (currentWinner != null) {
             val mentionedUser = formatUsername(currentWinner)
             sendMessage { dailyMessageTemplate.winnerExists.format(dailyMessageTemplate.alias, mentionedUser) }
@@ -132,7 +134,9 @@ class DailyMessageService(
         }
 
         val sentences = getRandomGroupSentences()
-        val winner = stats.filter { it.year == CURRENT_YEAR }.randomOrNull()?.apply { isWinner = true } ?: return
+        val winner = stats.filter { it.year == CURRENT_YEAR }
+            .randomOrNull()
+            ?.apply { user.isWinner = true } ?: return
         sendWinnerMessages(sentences, winner, update)
         updateWinner(update, winner)
     }
@@ -149,17 +153,19 @@ class DailyMessageService(
             delay(RANDOM_DELAY_RANGE.random())
             val mentionedUser = formatUsername(winner)
             sentence.text?.format(dailyMessageTemplate.alias, mentionedUser)?.let {
-                sendMessage { it }.options { parseMode = ParseMode.Markdown }.send(update.chatId, update.bot)
+                sendMessage { it }
+                    .options { parseMode = ParseMode.Markdown }
+                    .send(update.chatId, update.bot)
             }
         }
     }
 
     private fun updateWinner(update: UpdateContext, winner: Stat) {
-        update.chat.stats.find { it.userId == winner.userId && it.year == CURRENT_YEAR }?.apply {
-            this.score = (this.score ?: 0L) + 1
-            this.isWinner = true
+        update.chat.stats.find { it.user.id == winner.user.id && it.year == CURRENT_YEAR }?.apply {
+            this.user.isWinner = true
         }
         chatService.save(update.chat)
+        userRepository.save(winner.user)
     }
 
     fun getRandomGroupSentences(): List<Sentence> {
@@ -170,13 +176,13 @@ class DailyMessageService(
     fun resetWinners() {
         val chats = chatService.findAll()
         chats.forEach { chat ->
-            chat.stats.forEach { it.isWinner = false }
+            chat.stats.forEach { it.user.isWinner = false }
         }
         chatService.saveAll(chats)
     }
 
     fun formatUsername(stat: Stat?): String {
-        return "[${stat?.username}](tg://user?id=${ stat?.userId})"
+        return "[${stat?.user?.username}](tg://user?id=${stat?.user?.id})"
     }
 
     suspend fun sendScheduledDailyMessage(userContext: UpdateContext) {
@@ -197,26 +203,5 @@ class DailyMessageService(
         }
             .options { parseMode = ParseMode.Markdown }
             .send(update.chatId, update.bot)
-        stickerService.sendRandomSticker(update)
-        initializeStatsForNewYear(update.chat)
-    }
-
-    private fun initializeStatsForNewYear(chat: Chat) {
-        val existingYears = chat.stats.map { it.year }.toSet()
-        if (!existingYears.contains(CURRENT_YEAR)) {
-            chat.stats.forEach { stat ->
-                chat.stats.add(
-                    Stat(
-                        chat = chat,
-                        userId = stat.userId,
-                        username = stat.username,
-                        year = CURRENT_YEAR,
-                        score = 0,
-                        isWinner = false
-                    )
-                )
-            }
-            chatService.save(chat)
-        }
     }
 }

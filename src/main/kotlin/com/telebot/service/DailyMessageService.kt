@@ -4,7 +4,6 @@ import com.telebot.enums.SubCommand
 import com.telebot.model.*
 import com.telebot.properties.DailyMessageTemplate
 import com.telebot.repository.SentenceRepository
-import com.telebot.repository.UserRepository
 import com.telebot.util.PrinterUtil
 import eu.vendeli.tgbot.api.message.sendMessage
 import eu.vendeli.tgbot.types.ParseMode
@@ -18,7 +17,7 @@ class DailyMessageService(
     private val dailyMessageTemplate: DailyMessageTemplate,
     private val printerUtil: PrinterUtil,
     private val chatService: ChatService,
-    private val userRepository: UserRepository
+    private val userService: UserService
 ) : CommandService {
 
     companion object {
@@ -49,10 +48,7 @@ class DailyMessageService(
     }
 
     private fun saveUser(chat: Chat, userId: Long, username: String) {
-        val user = userRepository.findById(userId).orElseGet {
-            User(id = userId, username = username, isWinner = false)
-                .also { userRepository.save(it) }
-        }
+        val user = userService.findOrCreate(userId, username)
         chat.stats.add(
             Stat(
                 chat = chat,
@@ -124,7 +120,7 @@ class DailyMessageService(
             return
         }
 
-        val currentWinner = stats.find { it.user.isWinner == true && it.year == CURRENT_YEAR }
+        val currentWinner = stats.find { it.user.isWinner == true && it.year == CURRENT_YEAR }?.user
         if (currentWinner != null) {
             val mentionedUser = formatUsername(currentWinner)
             sendMessage { dailyMessageTemplate.winnerExists.format(dailyMessageTemplate.alias, mentionedUser) }
@@ -134,14 +130,12 @@ class DailyMessageService(
         }
 
         val sentences = getRandomGroupSentences()
-        val winner = stats.filter { it.year == CURRENT_YEAR }
-            .randomOrNull()
-            ?.apply { user.isWinner = true } ?: return
+        val winner = userService.chooseRandomWinner() ?: return
         sendWinnerMessages(sentences, winner, update)
         updateWinner(update, winner)
     }
 
-    private suspend fun sendWinnerMessages(sentences: List<Sentence>, winner: Stat, update: UpdateContext) {
+    private suspend fun sendWinnerMessages(sentences: List<Sentence>, winner: User, update: UpdateContext) {
         if (sentences.isEmpty()) {
             val mentionedUser = formatUsername(winner)
             sendMessage { dailyMessageTemplate.winnerExists.format(dailyMessageTemplate.alias, mentionedUser) }
@@ -160,12 +154,10 @@ class DailyMessageService(
         }
     }
 
-    private fun updateWinner(update: UpdateContext, winner: Stat) {
-        update.chat.stats.find { it.user.id == winner.user.id && it.year == CURRENT_YEAR }?.apply {
-            this.user.isWinner = true
-        }
+    private fun updateWinner(update: UpdateContext, user: User) {
+        user.isWinner = true
+        userService.update(user)
         chatService.save(update.chat)
-        userRepository.save(winner.user)
     }
 
     fun getRandomGroupSentences(): List<Sentence> {
@@ -181,8 +173,8 @@ class DailyMessageService(
         chatService.saveAll(chats)
     }
 
-    fun formatUsername(stat: Stat?): String {
-        return "[${stat?.user?.username}](tg://user?id=${stat?.user?.id})"
+    fun formatUsername(user: User?): String {
+        return "[${user?.username}](tg://user?id=${user?.id})"
     }
 
     suspend fun sendScheduledDailyMessage(userContext: UpdateContext) {
@@ -193,15 +185,17 @@ class DailyMessageService(
         val year = CURRENT_YEAR
         val stats = aggregateStats(update.chat.stats.filter { it.year == year })
         val winnerOfTheYear = stats.maxByOrNull { it.value.score ?: 0L }?.value
-        sendMessage {
-            dailyMessageTemplate.yearEndMessage.format(
-                dailyMessageTemplate.alias,
-                year,
-                formatUsername(winnerOfTheYear),
-                winnerOfTheYear?.score
-            )
+        if (winnerOfTheYear != null) {
+            sendMessage {
+                dailyMessageTemplate.yearEndMessage.format(
+                    dailyMessageTemplate.alias,
+                    year,
+                    formatUsername(winnerOfTheYear.user),
+                    winnerOfTheYear.score
+                )
+            }
+                .options { parseMode = ParseMode.Markdown }
+                .send(update.chatId, update.bot)
         }
-            .options { parseMode = ParseMode.Markdown }
-            .send(update.chatId, update.bot)
     }
 }

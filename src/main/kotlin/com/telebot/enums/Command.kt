@@ -16,13 +16,25 @@ sealed class Command(
     data object Help : Command(CommandConstants.HELP, "Displays this help message", true)
     data object Start : Command(CommandConstants.START, "Starts the bot", true)
     data object Gpt :
-        Command(CommandConstants.GPT, "Interact with the GPT model", subCommands = listOf(SubCommand.MEMORY, SubCommand.FORGET))
+        Command(
+            CommandConstants.GPT,
+            "Interact with the GPT model",
+            subCommands = listOf(SubCommand.MEMORY, SubCommand.FORGET)
+        )
 
     data object Meme :
-        Command(CommandConstants.MEME, "Manage memes", subCommands = listOf(SubCommand.LIST, SubCommand.ADD, SubCommand.REMOVE))
+        Command(
+            CommandConstants.MEME,
+            "Manage memes",
+            subCommands = listOf(SubCommand.LIST, SubCommand.ADD, SubCommand.REMOVE)
+        )
 
     data object Sticker :
-        Command(CommandConstants.STICKER, "Manage stickers", subCommands = listOf(SubCommand.LIST, SubCommand.ADD, SubCommand.REMOVE))
+        Command(
+            CommandConstants.STICKER,
+            "Manage stickers",
+            subCommands = listOf(SubCommand.LIST, SubCommand.ADD, SubCommand.REMOVE)
+        )
 
     data object Fact :
         Command(CommandConstants.FACT, "Add or manage facts", subCommands = listOf(SubCommand.ADD))

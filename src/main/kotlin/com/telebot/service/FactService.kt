@@ -67,7 +67,7 @@ class FactService(
     private suspend fun respondWithFact(fact: String, update: UpdateContext) {
         val audioFile = ttsService.generateAudioFile(fact)
         if (audioFile != null) {
-            sendAudio (ImplicitFile.InpFile(audioFile))
+            sendAudio(ImplicitFile.InpFile(audioFile))
                 .options { parseMode = ParseMode.Markdown }
                 .caption { fact }
                 .send(update.chatId, update.bot)

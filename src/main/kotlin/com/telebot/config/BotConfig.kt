@@ -34,7 +34,7 @@ class BotConfig(
             restrictSpacesInCommands = true
         }
         setMyCommands {
-            Command.values().forEach{ command ->
+            Command.values().forEach { command ->
                 if (command.listExcluded) return@forEach
                 botCommand(command.command, command.description)
             }

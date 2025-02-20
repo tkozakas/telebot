@@ -24,7 +24,11 @@ class PrinterUtil(
             .withIndex()
             .joinToString("\n") { (index, entry) ->
                 val (_, stat) = entry
-                bodyTemplate.format(index + 1, (if (stat.user.isWinner == true) "👑 " else "") + stat.user.username, stat.score)
+                bodyTemplate.format(
+                    index + 1,
+                    (if (stat.user.isWinner == true) "👑 " else "") + stat.user.username,
+                    stat.score
+                )
             }
 
         val formattedHeader = "*$header*"

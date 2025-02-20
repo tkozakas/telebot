@@ -38,8 +38,6 @@ dependencies {
     implementation("org.postgresql:postgresql:42.7.4")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
-    implementation("com.arthenica:ffmpeg-kit-full-gpl:4.5.1-1")
-
 
     implementation("org.jboss.logging:jboss-logging:3.5.0.Final")
 

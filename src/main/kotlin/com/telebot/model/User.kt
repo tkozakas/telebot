@@ -10,6 +10,9 @@ open class User(
     @Column(name = "user_id", nullable = false)
     open var userId: Long,
 
+    @Column(name = "chat_id", nullable = false)
+    open var chatId: Long? = null,
+
     @Column(name = "username")
     open var username: String? = null,
 

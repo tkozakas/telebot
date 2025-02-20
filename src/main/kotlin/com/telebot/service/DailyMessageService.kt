@@ -40,15 +40,16 @@ class DailyMessageService(
     }
 
     private suspend fun registerUser(update: UpdateContext) {
-        if (update.chat.users.any { it.userId == update.userId }) {
+        if (update.chat.users.any { it.userId == update.userId && it.chatId == update.chatId }) {
             sendMessage { dailyMessageTemplate.userAlreadyRegistered }
                 .send(update.chatId, update.bot)
             return
         }
-        val user = userService.findOrCreate(update.userId, update.username)
+        val user = userService.findOrCreate(update.userId, update.chatId, update.username)
         update.chat.users.add(user)
         chatService.save(update.chat)
-        sendMessage { dailyMessageTemplate.userRegistered.format(update.username) }
+        sendMessage { dailyMessageTemplate.userRegistered.format(formatUsername(update.username, update.userId)) }
+            .options { parseMode = ParseMode.Markdown }
             .send(update.chatId, update.bot)
     }
 
@@ -59,9 +60,9 @@ class DailyMessageService(
                 .send(update.chatId, update.bot)
             return
         }
-        val currentWinner = users.find { it.isWinner == true }
+        val currentWinner = users.find { it.isWinner == true && it.chatId == update.chatId }
         if (currentWinner != null) {
-            val mentionedUser = formatUsername(currentWinner)
+            val mentionedUser = formatUsername(currentWinner.username ?: "Unkown", currentWinner.userId)
             sendMessage { dailyMessageTemplate.winnerExists.format(dailyMessageTemplate.alias, mentionedUser) }
                 .options { parseMode = ParseMode.Markdown }
                 .send(update.chatId, update.bot)
@@ -72,7 +73,7 @@ class DailyMessageService(
                 .send(update.chatId, update.bot)
             return
         }
-        val winner = users.shuffled().first()
+        val winner = users.filter { it.chatId == update.chatId }.shuffled().first()
         val sentences = getRandomGroupSentences()
         sendWinnerMessages(sentences, winner, update)
         updateWinner(winner)
@@ -80,7 +81,7 @@ class DailyMessageService(
 
     private suspend fun sendWinnerMessages(sentences: List<Sentence>, winner: User, update: UpdateContext) {
         if (sentences.isEmpty()) {
-            val mentionedUser = formatUsername(winner)
+            val mentionedUser = formatUsername(winner.username ?: "Unkown", winner.userId)
             sendMessage { dailyMessageTemplate.winnerExists.format(dailyMessageTemplate.alias, mentionedUser) }
                 .options { parseMode = ParseMode.Markdown }
                 .send(update.chatId, update.bot)
@@ -88,7 +89,7 @@ class DailyMessageService(
         }
         sentences.sortedBy { it.orderNumber }.forEach { sentence ->
             delay(RANDOM_DELAY_RANGE.random())
-            val mentionedUser = formatUsername(winner)
+            val mentionedUser = formatUsername(winner.username ?: "Unkown", winner.userId)
             sentence.text?.format(dailyMessageTemplate.alias, mentionedUser)?.let {
                 sendMessage { it }
                     .options { parseMode = ParseMode.Markdown }
@@ -170,8 +171,8 @@ class DailyMessageService(
         chatService.saveAll(chats)
     }
 
-    fun formatUsername(user: User?): String {
-        return "[${user?.username}](tg://user?id=${user?.userId})"
+    fun formatUsername(username: String, userId: Long): String {
+        return "[${username}](tg://user?id=${userId})"
     }
 
     suspend fun sendScheduledDailyMessage(userContext: UpdateContext) {
@@ -186,7 +187,7 @@ class DailyMessageService(
                 dailyMessageTemplate.yearEndMessage.format(
                     dailyMessageTemplate.alias,
                     CURRENT_YEAR,
-                    formatUsername(winnerOfTheYear.user),
+                    formatUsername(winnerOfTheYear.user.username ?: "Unknown", winnerOfTheYear.user.userId),
                     winnerOfTheYear.score
                 )
             }

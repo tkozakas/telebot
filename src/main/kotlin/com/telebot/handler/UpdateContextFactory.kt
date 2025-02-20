@@ -21,7 +21,7 @@ class UpdateContextFactory(
         return UpdateContext(
             chatId = chat.telegramChatId ?: 0,
             userId = update.origin.message?.from?.id ?: 0,
-            username = update.origin.message?.from?.username ?: "",
+            username = update.origin.message?.from?.firstName ?: "",
             args = args,
             subCommand = subCommand,
             chat = chat,

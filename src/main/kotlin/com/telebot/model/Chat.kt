@@ -3,7 +3,7 @@ package com.telebot.model
 import jakarta.persistence.*
 
 @Entity
-@Table(name = "chat")
+@Table(name = "chats")
 open class Chat(
 
     @Id
@@ -28,5 +28,13 @@ open class Chat(
 
     @OneToMany(mappedBy = "chat", cascade = [CascadeType.ALL], fetch = FetchType.EAGER, orphanRemoval = true)
     open var subreddits: MutableSet<Subreddit> = mutableSetOf(),
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "chat_users",
+        joinColumns = [JoinColumn(name = "chat_id")],
+        inverseJoinColumns = [JoinColumn(name = "user_id")]
+    )
+    open var users: MutableSet<User> = mutableSetOf()
 
 )

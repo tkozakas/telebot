@@ -11,11 +11,11 @@ open class Stat(
     @Column(name = "stats_id", nullable = false)
     open var id: Long? = null,
 
-    @ManyToOne
-    @JoinColumn(name = "chat_id")
-    open var chat: Chat? = null,
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "chat_id", nullable = false)
+    open var chat: Chat,
 
-    @ManyToOne(optional = false)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
     open var user: User,
 

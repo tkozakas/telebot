@@ -40,6 +40,9 @@ dependencies {
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
     implementation("com.arthenica:ffmpeg-kit-full-gpl:4.5.1-1")
 
+
+    implementation("org.jboss.logging:jboss-logging:3.5.0.Final")
+
     implementation("ch.qos.logback:logback-classic:1.5.15")
     implementation("ch.qos.logback:logback-core:1.5.15")
 
@@ -47,6 +50,13 @@ dependencies {
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
     }
 }
+
+configurations.all {
+    resolutionStrategy {
+        force("org.jboss.logging:jboss-logging:3.5.0.Final")
+    }
+}
+
 
 kotlin {
     jvmToolchain(javaTarget.majorVersion.toInt())

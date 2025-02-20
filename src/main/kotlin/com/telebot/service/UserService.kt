@@ -10,18 +10,12 @@ class UserService(
 ) {
     fun findOrCreate(userId: Long, username: String?): User {
         val user = User(
-            id = userId,
+            userId = userId,
             username = username?.takeIf(String::isNotBlank) ?: "Unknown",
             isWinner = false
         )
         return userRepository.findById(userId).orElseGet { userRepository.save(user) }
     }
 
-    fun chooseRandomWinner(): User? {
-        return userRepository.findRandomUser()
-    }
-
-    fun update(user: User) {
-        userRepository.save(user)
-    }
+    fun saveUser(user: User) = userRepository.save(user)
 }

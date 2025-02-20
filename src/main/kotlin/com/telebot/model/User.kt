@@ -8,7 +8,7 @@ open class User(
 
     @Id
     @Column(name = "user_id", nullable = false)
-    open var id: Long,
+    open var userId: Long,
 
     @Column(name = "username")
     open var username: String? = null,
@@ -17,5 +17,9 @@ open class User(
     open var isWinner: Boolean? = null,
 
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], fetch = FetchType.EAGER, orphanRemoval = true)
-    open var stats: MutableSet<Stat> = mutableSetOf()
+    open var stats: MutableSet<Stat> = mutableSetOf(),
+
+    @ManyToMany(mappedBy = "users", cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
+    open var chats: MutableSet<Chat> = mutableSetOf()
+
 )

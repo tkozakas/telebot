@@ -49,28 +49,28 @@ class MemeService(
     private suspend fun listSubreddits(update: UpdateContext) {
         val subreddits = update.chat.subreddits
         val message = if (subreddits.isEmpty()) EMPTY_SUBREDDIT_LIST else printerUtil.printSubreddits(subreddits)
-        sendMessage { message }.options { parseMode = ParseMode.Markdown }.send(update.chatId, update.bot)
+        sendMessage { message }.options { parseMode = ParseMode.Markdown }.send(update.telegramChatId, update.bot)
     }
 
     private suspend fun addSubreddit(subredditName: String?, update: UpdateContext) {
         if (subredditName.isNullOrBlank() || !isValidSubreddit(subredditName)) {
-            sendMessage { PROVIDE_SUBREDDIT_NAME }.send(update.chatId, update.bot)
+            sendMessage { PROVIDE_SUBREDDIT_NAME }.send(update.telegramChatId, update.bot)
         } else {
             update.chat.subreddits.add(Subreddit(chat = update.chat, subredditName = subredditName))
             chatService.save(update.chat)
             sendMessage { SUBREDDIT_ADDED.format(subredditName) }.options { parseMode = ParseMode.Markdown }
-                .send(update.chatId, update.bot)
+                .send(update.telegramChatId, update.bot)
         }
     }
 
     private suspend fun removeSubreddit(subredditName: String?, update: UpdateContext) {
         if (subredditName.isNullOrBlank()) {
-            sendMessage { PROVIDE_SUBREDDIT_NAME }.send(update.chatId, update.bot)
+            sendMessage { PROVIDE_SUBREDDIT_NAME }.send(update.telegramChatId, update.bot)
         } else {
             update.chat.subreddits.removeIf { it.subredditName == subredditName }
             chatService.save(update.chat)
             sendMessage { SUBREDDIT_REMOVED.format(subredditName) }.options { parseMode = ParseMode.Markdown }
-                .send(update.chatId, update.bot)
+                .send(update.telegramChatId, update.bot)
         }
     }
 
@@ -78,14 +78,14 @@ class MemeService(
         val subreddit =
             update.args.getOrNull(1)?.ifBlank { subredditName } ?: update.chat.subreddits.randomOrNull()?.subredditName
         if (subreddit.isNullOrBlank()) {
-            sendMessage { NO_SUBREDDITS_FOUND }.send(update.chatId, update.bot)
+            sendMessage { NO_SUBREDDITS_FOUND }.send(update.telegramChatId, update.bot)
             return
         }
 
         val count = update.args.getOrNull(2)?.toIntOrNull() ?: 1
         val memes = fetchRedditMemes(subreddit, count)
         if (memes.isEmpty()) {
-            sendMessage { NO_MEMES_FOUND }.send(update.chatId, update.bot)
+            sendMessage { NO_MEMES_FOUND }.send(update.telegramChatId, update.bot)
             return
         }
 
@@ -97,9 +97,9 @@ class MemeService(
 
         val mediaGroup = memes.mapNotNull { buildMediaGroupEntry(it, subreddit) }
         if (mediaGroup.isEmpty()) {
-            sendMessage { "No suitable photos to display from the fetched memes." }.send(update.chatId, update.bot)
+            sendMessage { "No suitable photos to display from the fetched memes." }.send(update.telegramChatId, update.bot)
         } else {
-            sendMediaGroup(mediaGroup).send(update.chatId, update.bot)
+            sendMediaGroup(mediaGroup).send(update.telegramChatId, update.bot)
         }
 
         mediaUtil.deleteTempFiles()
@@ -111,7 +111,7 @@ class MemeService(
         update: UpdateContext
     ) {
         val url = meme.url ?: run {
-            sendMessage { NO_MEMES_FOUND }.send(update.chatId, update.bot)
+            sendMessage { NO_MEMES_FOUND }.send(update.telegramChatId, update.bot)
             return
         }
 
@@ -120,16 +120,16 @@ class MemeService(
             isPhoto(url) -> {
                 sendPhoto(ImplicitFile.Str(url))
                     .caption { caption }
-                    .send(update.chatId, update.bot)
+                    .send(update.telegramChatId, update.bot)
             }
 
             url.endsWith(".gif", true) -> {
                 sendAnimation(ImplicitFile.Str(url))
                     .caption { caption }
-                    .send(update.chatId, update.bot)
+                    .send(update.telegramChatId, update.bot)
             }
 
-            else -> sendMessage { "Unsupported media type." }.send(update.chatId, update.bot)
+            else -> sendMessage { "Unsupported media type." }.send(update.telegramChatId, update.bot)
         }
     }
 

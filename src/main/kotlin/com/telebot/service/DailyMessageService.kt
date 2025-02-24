@@ -40,60 +40,61 @@ class DailyMessageService(
     }
 
     private suspend fun registerUser(update: UpdateContext) {
-        if (update.chat.users.any { it.userId == update.userId && it.chatId == update.chatId }) {
+        if (update.chat.stats.any { it.user.telegramUserId == update.telegramUserId }) {
             sendMessage { dailyMessageTemplate.userAlreadyRegistered }
-                .send(update.chatId, update.bot)
+                .send(update.telegramChatId, update.bot)
             return
         }
-        val user = userService.findOrCreate(update.userId, update.chatId, update.username)
-        update.chat.users.add(user)
-        chatService.save(update.chat)
-        sendMessage { dailyMessageTemplate.userRegistered.format(formatUsername(update.username, update.userId)) }
+        val user = User(chat = update.chat, telegramUserId = update.telegramUserId, telegramUsername = update.telegramUsername)
+        val newStat = Stat(chat = update.chat, user = user, score = 0, year = CURRENT_YEAR)
+        user.stats.add(newStat)
+        userService.saveUser(user)
+        sendMessage { dailyMessageTemplate.userRegistered.format(formatUsername(update.telegramUsername, update.telegramUserId)) }
             .options { parseMode = ParseMode.Markdown }
-            .send(update.chatId, update.bot)
+            .send(update.telegramChatId, update.bot)
     }
 
     private suspend fun chooseRandomWinner(update: UpdateContext) {
-        val users = update.chat.users
-        if (users.isEmpty()) {
+        val stats = update.chat.stats
+        if (stats.isEmpty()) {
             sendMessage { dailyMessageTemplate.noStats }
-                .send(update.chatId, update.bot)
+                .send(update.telegramChatId, update.bot)
             return
         }
-        val currentWinner = users.find { it.isWinner == true && it.chatId == update.chatId }
+        val currentWinner = stats.find { it.isWinner == true && it.chat.telegramChatId == update.telegramChatId }
         if (currentWinner != null) {
-            val mentionedUser = formatUsername(currentWinner.username ?: "Unkown", currentWinner.userId)
+            val mentionedUser = formatUsername(currentWinner.user.telegramUsername ?: "Unkown", currentWinner.user.telegramUserId)
             sendMessage { dailyMessageTemplate.winnerExists.format(dailyMessageTemplate.alias, mentionedUser) }
                 .options { parseMode = ParseMode.Markdown }
-                .send(update.chatId, update.bot)
+                .send(update.telegramChatId, update.bot)
             return
         }
-        if (users.isEmpty()) {
+        if (stats.isEmpty()) {
             sendMessage { dailyMessageTemplate.noStats }
-                .send(update.chatId, update.bot)
+                .send(update.telegramChatId, update.bot)
             return
         }
-        val winner = users.filter { it.chatId == update.chatId }.shuffled().first()
+        val winner = stats.filter { it.chat.telegramChatId == update.telegramChatId }.shuffled().first()
         val sentences = getRandomGroupSentences()
-        sendWinnerMessages(sentences, winner, update)
-        updateWinner(winner)
+        sendWinnerMessages(sentences, winner.user, update)
+        updateWinner(winner.user)
     }
 
     private suspend fun sendWinnerMessages(sentences: List<Sentence>, winner: User, update: UpdateContext) {
         if (sentences.isEmpty()) {
-            val mentionedUser = formatUsername(winner.username ?: "Unkown", winner.userId)
+            val mentionedUser = formatUsername(winner.telegramUsername ?: "Unkown", winner.telegramUserId)
             sendMessage { dailyMessageTemplate.winnerExists.format(dailyMessageTemplate.alias, mentionedUser) }
                 .options { parseMode = ParseMode.Markdown }
-                .send(update.chatId, update.bot)
+                .send(update.telegramChatId, update.bot)
             return
         }
         sentences.sortedBy { it.orderNumber }.forEach { sentence ->
             delay(RANDOM_DELAY_RANGE.random())
-            val mentionedUser = formatUsername(winner.username ?: "Unkown", winner.userId)
+            val mentionedUser = formatUsername(winner.telegramUsername ?: "Unkown", winner.telegramUserId)
             sentence.text?.format(dailyMessageTemplate.alias, mentionedUser)?.let {
                 sendMessage { it }
                     .options { parseMode = ParseMode.Markdown }
-                    .send(update.chatId, update.bot)
+                    .send(update.telegramChatId, update.bot)
             }
         }
     }
@@ -101,13 +102,13 @@ class DailyMessageService(
     private fun updateWinner(user: User) {
         user.stats.find { it.year == CURRENT_YEAR }?.let {
             it.score = (it.score ?: 0) + 1
-        } ?: user.stats.add(Stat(chat = user.chats.first(), user = user, score = 1, year = CURRENT_YEAR))
-        user.isWinner = true
+            it.isWinner = true
+        } ?: user.stats.add(Stat(chat = user.chat, user = user, score = 1, year = CURRENT_YEAR, isWinner = true))
         userService.saveUser(user)
     }
 
     private fun aggregateStats(stats: Collection<Stat>): Map<Long, Stat> {
-        return stats.groupBy { it.user.userId }
+        return stats.groupBy { it.user.telegramUserId }
             .map { (userId, userStats) ->
                 val firstStat = userStats.first()
                 userId to Stat(
@@ -143,7 +144,7 @@ class DailyMessageService(
     ) {
         if (stats.isEmpty()) {
             sendMessage { dailyMessageTemplate.noStats }
-                .send(update.chatId, update.bot)
+                .send(update.telegramChatId, update.bot)
             return
         }
         val message = printerUtil.printStats(
@@ -155,7 +156,7 @@ class DailyMessageService(
         )
         sendMessage { message }
             .options { parseMode = ParseMode.Markdown }
-            .send(update.chatId, update.bot)
+            .send(update.telegramChatId, update.bot)
     }
 
     fun getRandomGroupSentences(): List<Sentence> {
@@ -166,7 +167,7 @@ class DailyMessageService(
     fun resetWinners() {
         val chats = chatService.findAll()
         chats.forEach { chat ->
-            chat.users.forEach { it.isWinner = false }
+            chat.stats.forEach { it.isWinner = false }
         }
         chatService.saveAll(chats)
     }
@@ -187,12 +188,12 @@ class DailyMessageService(
                 dailyMessageTemplate.yearEndMessage.format(
                     dailyMessageTemplate.alias,
                     CURRENT_YEAR,
-                    formatUsername(winnerOfTheYear.user.username ?: "Unknown", winnerOfTheYear.user.userId),
+                    formatUsername(winnerOfTheYear.user.telegramUsername ?: "Unknown", winnerOfTheYear.user.telegramUserId),
                     winnerOfTheYear.score
                 )
             }
                 .options { parseMode = ParseMode.Markdown }
-                .send(update.chatId, update.bot)
+                .send(update.telegramChatId, update.bot)
         }
     }
 }

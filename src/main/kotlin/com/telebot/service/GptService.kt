@@ -39,28 +39,28 @@ class GptService(
     }
 
     private suspend fun sendChatHistory(update: UpdateContext) {
-        val historyFile = generateChatHistory(update.chatId)
+        val historyFile = generateChatHistory(update.telegramChatId)
         if (historyFile == null) {
-            sendMessage { CHAT_HISTORY_EMPTY }.send(update.chatId, update.bot)
+            sendMessage { CHAT_HISTORY_EMPTY }.send(update.telegramChatId, update.bot)
         } else {
             sendDocument(ImplicitFile.InpFile(historyFile))
                 .caption { "Chat history" }
-                .send(update.chatId, update.bot)
+                .send(update.telegramChatId, update.bot)
         }
     }
 
     private suspend fun clearChatHistory(update: UpdateContext) {
-        gptMessageStorageService.clearMessages(update.chatId)
-        sendMessage { CHAT_HISTORY_CLEARED }.send(update.chatId, update.bot)
+        gptMessageStorageService.clearMessages(update.telegramChatId)
+        sendMessage { CHAT_HISTORY_CLEARED }.send(update.telegramChatId, update.bot)
     }
 
     private suspend fun processChat(update: UpdateContext, prompt: String) {
         if (prompt.isBlank()) {
-            sendMessage { INVALID_PROMPT }.send(update.chatId, update.bot)
+            sendMessage { INVALID_PROMPT }.send(update.telegramChatId, update.bot)
             return
         }
-        val response = processPrompt(update.chatId, prompt)
-        sendMessage { response ?: NO_RESPONSE }.send(update.chatId, update.bot)
+        val response = processPrompt(update.telegramChatId, prompt)
+        sendMessage { response ?: NO_RESPONSE }.send(update.telegramChatId, update.bot)
     }
 
     private fun processPrompt(chatId: Long, prompt: String): String? {

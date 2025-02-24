@@ -7,7 +7,7 @@ import jakarta.persistence.*
 open class Chat(
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "chat_id", nullable = false)
     open var id: Long? = null,
 
@@ -15,13 +15,10 @@ open class Chat(
     open var telegramChatId: Long? = null,
 
     @Column(name = "chat_name", length = 255)
-    open var chatName: String? = null,
+    open var telegramChatName: String? = null,
 
     @OneToMany(mappedBy = "chat", cascade = [CascadeType.ALL], fetch = FetchType.EAGER, orphanRemoval = true)
     open var facts: MutableSet<Fact> = mutableSetOf(),
-
-    @OneToMany(mappedBy = "chat", cascade = [CascadeType.ALL], fetch = FetchType.EAGER, orphanRemoval = true)
-    open var stats: MutableSet<Stat> = mutableSetOf(),
 
     @OneToMany(mappedBy = "chat", cascade = [CascadeType.ALL], fetch = FetchType.EAGER, orphanRemoval = true)
     open var stickers: MutableSet<Sticker> = mutableSetOf(),
@@ -29,12 +26,10 @@ open class Chat(
     @OneToMany(mappedBy = "chat", cascade = [CascadeType.ALL], fetch = FetchType.EAGER, orphanRemoval = true)
     open var subreddits: MutableSet<Subreddit> = mutableSetOf(),
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-        name = "chat_users",
-        joinColumns = [JoinColumn(name = "chat_id")],
-        inverseJoinColumns = [JoinColumn(name = "user_id")]
-    )
+    @OneToMany(mappedBy = "chat", cascade = [CascadeType.ALL], fetch = FetchType.EAGER, orphanRemoval = true)
+    open var stats: MutableSet<Stat> = mutableSetOf(),
+
+    @OneToMany(mappedBy = "chat", cascade = [CascadeType.ALL], fetch = FetchType.EAGER, orphanRemoval = true)
     open var users: MutableSet<User> = mutableSetOf()
 
 )

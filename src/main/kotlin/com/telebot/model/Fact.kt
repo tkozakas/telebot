@@ -11,11 +11,11 @@ open class Fact(
     @Column(name = "fact_id", nullable = false)
     open var id: Long? = null,
 
+    @Column(name = "comment", length = 3500)
+    open var comment: String? = null,
+
     @ManyToOne
     @JoinColumn(name = "chat_id")
     open var chat: Chat? = null,
-
-    @Column(name = "comment", length = 3500)
-    open var comment: String? = null
 
 )

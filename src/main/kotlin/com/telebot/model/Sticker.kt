@@ -12,10 +12,6 @@ open class Sticker(
     @Column(name = "sticker_id", nullable = false)
     open var id: UUID? = null,
 
-    @ManyToOne
-    @JoinColumn(name = "chat_id")
-    open var chat: Chat? = null,
-
     @Column(name = "file_id")
     open var fileId: String? = null,
 
@@ -23,6 +19,10 @@ open class Sticker(
     open var emoji: String? = null,
 
     @Column(name = "sticker_set_name")
-    open var stickerSetName: String? = null
+    open var stickerSetName: String? = null,
+
+    @ManyToOne
+    @JoinColumn(name = "chat_id")
+    open var chat: Chat? = null,
 
 )

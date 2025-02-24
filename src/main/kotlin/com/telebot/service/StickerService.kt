@@ -37,17 +37,17 @@ class StickerService(
     private suspend fun listStickers(update: UpdateContext) {
         val stickers = chatService.findAll().flatMap { it.stickers }
         val message = if (stickers.isEmpty()) NO_STICKERS_FOUND else printerUtil.printStickers(stickers)
-        sendMessage { message }.options { parseMode = ParseMode.Markdown }.send(update.chatId, update.bot)
+        sendMessage { message }.options { parseMode = ParseMode.Markdown }.send(update.telegramChatId, update.bot)
     }
 
     private suspend fun addSticker(update: UpdateContext) {
         val stickerName = update.args.getOrNull(2)?.removePrefix(TELEGRAM_STICKER_URL)
         if (stickerName.isNullOrBlank()) {
-            sendMessage { INVALID_STICKER_NAME }.send(update.chatId, update.bot)
+            sendMessage { INVALID_STICKER_NAME }.send(update.telegramChatId, update.bot)
             return
         }
         if (update.chat.stickers.any { it.stickerSetName == stickerName }) {
-            sendMessage { STICKER_SET_ALREADY_EXISTS.format(stickerName) }.send(update.chatId, update.bot)
+            sendMessage { STICKER_SET_ALREADY_EXISTS.format(stickerName) }.send(update.telegramChatId, update.bot)
             return
         }
         val stickerSet = getStickerSet(stickerName).sendReturning(update.bot)
@@ -60,36 +60,36 @@ class StickerService(
             )
         }
         if (stickers.isNullOrEmpty()) {
-            sendMessage { NO_STICKERS_FOUND }.send(update.chatId, update.bot)
+            sendMessage { NO_STICKERS_FOUND }.send(update.telegramChatId, update.bot)
             return
         }
         update.chat.stickers.addAll(stickers)
         chatService.save(update.chat)
-        sendMessage { STICKER_ADDED.format(stickerName) }.send(update.chatId, update.bot)
+        sendMessage { STICKER_ADDED.format(stickerName) }.send(update.telegramChatId, update.bot)
     }
 
     private suspend fun removeSticker(update: UpdateContext) {
         val stickerName = update.args.getOrNull(2)
         if (stickerName.isNullOrBlank()) {
-            sendMessage { INVALID_STICKER_NAME }.send(update.chatId, update.bot)
+            sendMessage { INVALID_STICKER_NAME }.send(update.telegramChatId, update.bot)
             return
         }
         val stickers = update.chat.stickers.filter { it.stickerSetName == stickerName }
         if (stickers.isEmpty()) {
-            sendMessage { NO_STICKERS_FOUND }.send(update.chatId, update.bot)
+            sendMessage { NO_STICKERS_FOUND }.send(update.telegramChatId, update.bot)
             return
         }
         update.chat.stickers.removeAll(stickers.toSet())
         chatService.save(update.chat)
-        sendMessage { STICKER_REMOVED.format(stickerName) }.send(update.chatId, update.bot)
+        sendMessage { STICKER_REMOVED.format(stickerName) }.send(update.telegramChatId, update.bot)
     }
 
     suspend fun sendRandomSticker(update: UpdateContext) {
         val sticker = update.chat.stickers.randomOrNull()
         if (sticker == null || sticker.fileId.isNullOrBlank()) {
-            sendMessage { NO_STICKERS_FOUND }.send(update.chatId, update.bot)
+            sendMessage { NO_STICKERS_FOUND }.send(update.telegramChatId, update.bot)
         } else {
-            sticker { sticker.fileId!! }.send(update.chatId, update.bot)
+            sticker { sticker.fileId!! }.send(update.telegramChatId, update.bot)
         }
     }
 }

@@ -31,11 +31,11 @@ class TtsService(
         val tempAudioFile = generateAudioFile(messageText)
 
         if (tempAudioFile == null) {
-            sendMessage { NO_RESPONSE_MESSAGE }.send(update.chatId, update.bot)
+            sendMessage { NO_RESPONSE_MESSAGE }.send(update.telegramChatId, update.bot)
         } else {
             sendAudio(ImplicitFile.InpFile(tempAudioFile))
                 .caption { messageText }
-                .send(update.chatId, update.bot)
+                .send(update.telegramChatId, update.bot)
         }
     }
 

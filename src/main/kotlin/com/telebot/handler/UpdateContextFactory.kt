@@ -19,9 +19,9 @@ class UpdateContextFactory(
         val args = update.text.drop(1).split(" ")
         val subCommand = args.getOrNull(1)
         return UpdateContext(
-            chatId = chat.telegramChatId ?: 0,
-            userId = update.origin.message?.from?.id ?: 0,
-            username = update.origin.message?.from?.firstName ?: "",
+            telegramChatId = chat.telegramChatId ?: 0,
+            telegramUserId = update.origin.message?.from?.id ?: 0,
+            telegramUsername = update.origin.message?.from?.firstName ?: "",
             args = args,
             subCommand = subCommand,
             chat = chat,
@@ -31,9 +31,9 @@ class UpdateContextFactory(
 
     fun create(chat: Chat, bot: TelegramBot): UpdateContext {
         return UpdateContext(
-            chatId = chat.telegramChatId ?: 0,
-            userId = 0,
-            username = "",
+            telegramChatId = chat.telegramChatId ?: 0,
+            telegramUserId = 0,
+            telegramUsername = "",
             args = emptyList(),
             subCommand = null,
             chat = chat,

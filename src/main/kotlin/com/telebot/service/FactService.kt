@@ -34,11 +34,11 @@ class FactService(
 
     private suspend fun addFact(factText: String, update: UpdateContext) {
         if (factText.isBlank()) {
-            sendMessage { FACT_BLANK }.send(update.chatId, update.bot)
+            sendMessage { FACT_BLANK }.send(update.telegramChatId, update.bot)
             return
         }
         saveFact(update.chat, factText)
-        sendMessage { FACT_ADDED }.send(update.chatId, update.bot)
+        sendMessage { FACT_ADDED }.send(update.telegramChatId, update.bot)
     }
 
     private fun saveFact(chat: Chat, factText: String) {
@@ -50,7 +50,7 @@ class FactService(
     suspend fun provideRandomFact(update: UpdateContext) {
         val randomFact = getRandomFact()
         if (randomFact == null) {
-            sendMessage { NO_FACTS }.send(update.chatId, update.bot)
+            sendMessage { NO_FACTS }.send(update.telegramChatId, update.bot)
         } else {
             respondWithFact(randomFact, update)
         }
@@ -70,11 +70,11 @@ class FactService(
             sendAudio(ImplicitFile.InpFile(audioFile))
                 .options { parseMode = ParseMode.Markdown }
                 .caption { fact }
-                .send(update.chatId, update.bot)
+                .send(update.telegramChatId, update.bot)
         } else {
             sendMessage { fact }
                 .options { parseMode = ParseMode.Markdown }
-                .send(update.chatId, update.bot)
+                .send(update.telegramChatId, update.bot)
         }
     }
 }

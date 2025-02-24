@@ -13,7 +13,7 @@ class ChatService(
 
     fun saveChat(chatId: Long, chatName: String?): Chat {
         val chat = chatRepository.findByTelegramChatId(chatId) ?: Chat(telegramChatId = chatId)
-        chat.chatName = chatName?.takeIf(String::isNotBlank) ?: botUsername
+        chat.telegramChatName = chatName?.takeIf(String::isNotBlank) ?: botUsername
         return chatRepository.save(chat)
     }
 

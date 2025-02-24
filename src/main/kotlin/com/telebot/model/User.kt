@@ -7,22 +7,21 @@ import jakarta.persistence.*
 open class User(
 
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "user_id", nullable = false)
-    open var userId: Long,
+    open var id: Long? = null,
 
-    @Column(name = "chat_id", nullable = false)
-    open var chatId: Long? = null,
+    @Column(name = "telegram_user_id", nullable = false)
+    open var telegramUserId: Long,
 
     @Column(name = "username")
-    open var username: String? = null,
+    open var telegramUsername: String? = null,
 
-    @Column(name = "is_winner")
-    open var isWinner: Boolean? = null,
+    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
+    open val stats: MutableList<Stat> = mutableListOf(),
 
-    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], fetch = FetchType.EAGER, orphanRemoval = true)
-    open var stats: MutableSet<Stat> = mutableSetOf(),
-
-    @ManyToMany(mappedBy = "users", cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
-    open var chats: MutableSet<Chat> = mutableSetOf()
-
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "chat_id", nullable = false)
+    open var chat: Chat
 )
+

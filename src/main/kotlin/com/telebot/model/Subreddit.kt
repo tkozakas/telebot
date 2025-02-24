@@ -12,11 +12,11 @@ open class Subreddit(
     @Column(name = "subreddit_id", nullable = false)
     open var id: UUID? = null,
 
+    @Column(name = "subreddit_name", nullable = false)
+    open var subredditName: String? = null,
+
     @ManyToOne
     @JoinColumn(name = "chat_id")
-    open var chat: Chat? = null,
-
-    @Column(name = "subreddit_name", nullable = false)
-    open var subredditName: String? = null
+    open var chat: Chat? = null
 
 )

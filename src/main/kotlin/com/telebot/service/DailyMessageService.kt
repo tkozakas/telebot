@@ -126,7 +126,8 @@ class DailyMessageService(
                     chat = firstStat.chat,
                     user = firstStat.user,
                     score = userStats.sumOf { it.score ?: 0L },
-                    year = firstStat.year
+                    year = firstStat.year,
+                    isWinner = userStats.any { it.isWinner == true && it.year == CURRENT_YEAR }
                 )
             }
             .toMap()

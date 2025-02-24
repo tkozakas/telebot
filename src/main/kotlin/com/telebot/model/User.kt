@@ -17,7 +17,7 @@ open class User(
     @Column(name = "username")
     open var telegramUsername: String? = null,
 
-    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], fetch = FetchType.EAGER, orphanRemoval = true)
     open val stats: MutableList<Stat> = mutableListOf(),
 
     @ManyToOne(fetch = FetchType.EAGER)

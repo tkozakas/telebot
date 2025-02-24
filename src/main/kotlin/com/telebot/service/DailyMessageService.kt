@@ -55,18 +55,15 @@ class DailyMessageService(
     }
 
     private suspend fun chooseRandomWinner(update: UpdateContext) {
-        val stats = update.chat.stats
+        val stats = update.chat.stats.filter { CURRENT_YEAR == it.year }
         if (stats.isEmpty()) {
             sendMessage { dailyMessageTemplate.noStats }
                 .send(update.telegramChatId, update.bot)
             return
         }
-        val currentWinner = stats.find { it.isWinner == true && it.chat.telegramChatId == update.telegramChatId }
+        val currentWinner = stats.find { it.isWinner == true }
         if (currentWinner != null) {
-            val mentionedUser = formatUsername(currentWinner.user.telegramUsername ?: "Unkown", currentWinner.user.telegramUserId)
-            sendMessage { dailyMessageTemplate.winnerExists.format(dailyMessageTemplate.alias, mentionedUser) }
-                .options { parseMode = ParseMode.Markdown }
-                .send(update.telegramChatId, update.bot)
+            chosenWinnerMessage(currentWinner.user, update)
             return
         }
         if (stats.isEmpty()) {
@@ -80,13 +77,18 @@ class DailyMessageService(
         updateWinner(winner.user)
     }
 
+    private suspend fun chosenWinnerMessage(winner: User, update: UpdateContext) {
+        val mentionedUser =
+            formatUsername(winner.telegramUsername ?: "Unkown", winner.telegramUserId)
+        sendMessage { dailyMessageTemplate.winnerExists.format(dailyMessageTemplate.alias, mentionedUser) }
+            .options { parseMode = ParseMode.Markdown }
+            .send(update.telegramChatId, update.bot)
+        return
+    }
+
     private suspend fun sendWinnerMessages(sentences: List<Sentence>, winner: User, update: UpdateContext) {
         if (sentences.isEmpty()) {
-            val mentionedUser = formatUsername(winner.telegramUsername ?: "Unkown", winner.telegramUserId)
-            sendMessage { dailyMessageTemplate.winnerExists.format(dailyMessageTemplate.alias, mentionedUser) }
-                .options { parseMode = ParseMode.Markdown }
-                .send(update.telegramChatId, update.bot)
-            return
+            chosenWinnerMessage(winner, update)
         }
         sentences.sortedBy { it.orderNumber }.forEach { sentence ->
             delay(RANDOM_DELAY_RANGE.random())

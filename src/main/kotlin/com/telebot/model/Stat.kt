@@ -7,7 +7,7 @@ import jakarta.persistence.*
 open class Stat(
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(name = "stats_id", nullable = false)
     open var id: Long? = null,
 

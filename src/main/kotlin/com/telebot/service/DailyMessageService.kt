@@ -55,7 +55,7 @@ class DailyMessageService(
     }
 
     private suspend fun chooseRandomWinner(update: UpdateContext) {
-        val stats = update.chat.stats.filter { CURRENT_YEAR == it.year }
+        val stats = update.chat.stats
         if (stats.isEmpty()) {
             sendMessage { dailyMessageTemplate.noStats }
                 .send(update.telegramChatId, update.bot)
@@ -71,15 +71,16 @@ class DailyMessageService(
                 .send(update.telegramChatId, update.bot)
             return
         }
-        val winner = stats.filter { it.chat.telegramChatId == update.telegramChatId }.shuffled().first()
+        val users = userService.findUsersByChat(update.chat)
+        val winner = users.random()
         val sentences = getRandomGroupSentences()
-        sendWinnerMessages(sentences, winner.user, update)
-        updateWinner(winner.user)
+        sendWinnerMessages(sentences, winner, update)
+        updateWinner(winner)
     }
 
     private suspend fun chosenWinnerMessage(winner: User, update: UpdateContext) {
         val mentionedUser =
-            formatUsername(winner.telegramUsername ?: "Unkown", winner.telegramUserId)
+            formatUsername(winner.telegramUsername ?: "Unknown", winner.telegramUserId)
         sendMessage { dailyMessageTemplate.winnerExists.format(dailyMessageTemplate.alias, mentionedUser) }
             .options { parseMode = ParseMode.Markdown }
             .send(update.telegramChatId, update.bot)
@@ -92,7 +93,7 @@ class DailyMessageService(
         }
         sentences.sortedBy { it.orderNumber }.forEach { sentence ->
             delay(RANDOM_DELAY_RANGE.random())
-            val mentionedUser = formatUsername(winner.telegramUsername ?: "Unkown", winner.telegramUserId)
+            val mentionedUser = formatUsername(winner.telegramUsername ?: "Unknown", winner.telegramUserId)
             sentence.text?.format(dailyMessageTemplate.alias, mentionedUser)?.let {
                 sendMessage { it }
                     .options { parseMode = ParseMode.Markdown }
@@ -105,7 +106,15 @@ class DailyMessageService(
         user.stats.find { it.year == CURRENT_YEAR }?.let {
             it.score = (it.score ?: 0) + 1
             it.isWinner = true
-        } ?: user.stats.add(Stat(chat = user.chat, user = user, score = 1, year = CURRENT_YEAR, isWinner = true))
+        } ?: user.stats.add(
+            Stat(
+                chat = user.chat,
+                user = user,
+                score = 1,
+                year = CURRENT_YEAR,
+                isWinner = true
+            )
+        )
         userService.saveUser(user)
     }
 

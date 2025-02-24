@@ -8,7 +8,7 @@ object CommandConstants {
     const val STICKER = "${PREFIX}sticker"
     const val FACT = "${PREFIX}fact"
     const val TTS = "${PREFIX}tts"
-    const val DAILY_MESSAGE = "${PREFIX}pidor" // TODO take from env somehow
+    const val DAILY_MESSAGE = "${PREFIX}pidor"
     const val HELP = "${PREFIX}help"
     const val START = "${PREFIX}start"
 }

@@ -26,7 +26,7 @@ class PrinterUtil(
                 val (_, stat) = entry
                 bodyTemplate.format(
                     index + 1,
-                    (if (stat.user.isWinner == true) "👑 " else "") + stat.user.telegramUsername,
+                    (if (stat.isWinner == true) "👑 " else "") + stat.user.telegramUsername,
                     stat.score
                 )
             }

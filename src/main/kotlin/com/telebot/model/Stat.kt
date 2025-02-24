@@ -12,7 +12,7 @@ open class Stat(
     open var id: Long? = null,
 
     @Column(name = "score")
-    open var score: Long? = null,
+    open var score: Long,
 
     @Column(name = "year")
     open var year: Int? = null,

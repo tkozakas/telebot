@@ -125,7 +125,7 @@ class DailyMessageService(
                 userId to Stat(
                     chat = firstStat.chat,
                     user = firstStat.user,
-                    score = userStats.sumOf { it.score ?: 0L },
+                    score = userStats.sumOf { it.score },
                     year = firstStat.year,
                     isWinner = userStats.any { it.isWinner == true && it.year == CURRENT_YEAR }
                 )
@@ -193,8 +193,8 @@ class DailyMessageService(
     }
 
     suspend fun sendYearEndMessage(update: UpdateContext) {
-        val stats = aggregateStats(update.chat.stats)
-        val winnerOfTheYear = stats.maxByOrNull { it.value.score!! }?.value
+        val stats = aggregateStats(update.chat.stats.filter { CURRENT_YEAR == it.year })
+        val winnerOfTheYear = stats.values.maxByOrNull { it.score }
         if (winnerOfTheYear != null) {
             sendMessage {
                 dailyMessageTemplate.yearEndMessage.format(

@@ -33,6 +33,7 @@ class MemeService(
         private const val SUBREDDIT_ADDED = "Subreddit `%s` added."
         private const val SUBREDDIT_REMOVED = "Subreddit `%s` removed."
         private const val NO_MEMES_FOUND = "No memes found for this subreddit."
+        private const val ALREADY_EXISTS = "Subreddit `%s` already exists."
     }
 
     override suspend fun handle(update: UpdateContext) {
@@ -53,12 +54,19 @@ class MemeService(
     }
 
     private suspend fun addSubreddit(subredditName: String?, update: UpdateContext) {
+        if (update.chat.subreddits.any { it.subredditName == subredditName }) {
+            sendMessage { ALREADY_EXISTS.format(subredditName) }
+                .options { parseMode = ParseMode.Markdown }
+                .send(update.telegramChatId, update.bot)
+            return
+        }
         if (subredditName.isNullOrBlank() || !isValidSubreddit(subredditName)) {
             sendMessage { PROVIDE_SUBREDDIT_NAME }.send(update.telegramChatId, update.bot)
         } else {
             update.chat.subreddits.add(Subreddit(chat = update.chat, subredditName = subredditName))
             chatService.save(update.chat)
-            sendMessage { SUBREDDIT_ADDED.format(subredditName) }.options { parseMode = ParseMode.Markdown }
+            sendMessage { SUBREDDIT_ADDED.format(subredditName) }
+                .options { parseMode = ParseMode.Markdown }
                 .send(update.telegramChatId, update.bot)
         }
     }
@@ -69,7 +77,8 @@ class MemeService(
         } else {
             update.chat.subreddits.removeIf { it.subredditName == subredditName }
             chatService.save(update.chat)
-            sendMessage { SUBREDDIT_REMOVED.format(subredditName) }.options { parseMode = ParseMode.Markdown }
+            sendMessage { SUBREDDIT_REMOVED.format(subredditName) }
+                .options { parseMode = ParseMode.Markdown }
                 .send(update.telegramChatId, update.bot)
         }
     }

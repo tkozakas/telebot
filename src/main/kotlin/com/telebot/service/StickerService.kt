@@ -18,11 +18,11 @@ class StickerService(
 
     companion object {
         private const val TELEGRAM_STICKER_URL = "https://t.me/addstickers/"
-        private const val STICKER_SET_ALREADY_EXISTS = "Sticker set %s already exists"
         private const val NO_STICKERS_FOUND = "No stickers found"
         private const val INVALID_STICKER_NAME = "Invalid sticker name"
-        private const val STICKER_ADDED = "Sticker %s added"
-        private const val STICKER_REMOVED = "Sticker %s removed"
+        private const val STICKER_ADDED = "Sticker set `%s` added"
+        private const val STICKER_REMOVED = "Sticker set `%s` removed"
+        private const val STICKER_ALREADY_EXISTS = "Sticker set `%s` already exists"
     }
 
     override suspend fun handle(update: UpdateContext) {
@@ -43,11 +43,14 @@ class StickerService(
     private suspend fun addSticker(update: UpdateContext) {
         val stickerName = update.args.getOrNull(2)?.removePrefix(TELEGRAM_STICKER_URL)
         if (stickerName.isNullOrBlank()) {
-            sendMessage { INVALID_STICKER_NAME }.send(update.telegramChatId, update.bot)
+            sendMessage { INVALID_STICKER_NAME }
+                .send(update.telegramChatId, update.bot)
             return
         }
         if (update.chat.stickers.any { it.stickerSetName == stickerName }) {
-            sendMessage { STICKER_SET_ALREADY_EXISTS.format(stickerName) }.send(update.telegramChatId, update.bot)
+            sendMessage { STICKER_ALREADY_EXISTS.format(stickerName) }
+                .options { parseMode = ParseMode.Markdown }
+                .send(update.telegramChatId, update.bot)
             return
         }
         val stickerSet = getStickerSet(stickerName).sendReturning(update.bot)
@@ -65,7 +68,9 @@ class StickerService(
         }
         update.chat.stickers.addAll(stickers)
         chatService.save(update.chat)
-        sendMessage { STICKER_ADDED.format(stickerName) }.send(update.telegramChatId, update.bot)
+        sendMessage { STICKER_ADDED.format(stickerName) }
+            .options { parseMode = ParseMode.Markdown }
+            .send(update.telegramChatId, update.bot)
     }
 
     private suspend fun removeSticker(update: UpdateContext) {
@@ -81,7 +86,9 @@ class StickerService(
         }
         update.chat.stickers.removeAll(stickers.toSet())
         chatService.save(update.chat)
-        sendMessage { STICKER_REMOVED.format(stickerName) }.send(update.telegramChatId, update.bot)
+        sendMessage { STICKER_REMOVED.format(stickerName) }
+            .options { parseMode = ParseMode.Markdown }
+            .send(update.telegramChatId, update.bot)
     }
 
     suspend fun sendRandomSticker(update: UpdateContext) {

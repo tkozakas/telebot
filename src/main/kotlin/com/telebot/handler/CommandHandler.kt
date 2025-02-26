@@ -23,38 +23,41 @@ class CommandHandler(
     private val updateContextFactory: UpdateContextFactory
 ) {
 
-    @CommonHandler.Regex("^${CommandConstants.GPT}$")
+    @CommonHandler.Regex(".*${CommandConstants.GPT}.*")
     suspend fun handleGpt(update: ProcessedUpdate, bot: TelegramBot) {
         gptService.handle(updateContextFactory.create(update, bot))
     }
 
-    @CommonHandler.Regex("^${CommandConstants.MEME}$")
+    @CommonHandler.Regex(".*${CommandConstants.MEME}.*")
     suspend fun handleMeme(update: ProcessedUpdate, bot: TelegramBot) {
         memeService.handle(updateContextFactory.create(update, bot))
     }
 
-    @CommonHandler.Regex("^${CommandConstants.STICKER}$")
+    @CommonHandler.Regex(".*${CommandConstants.STICKER}.*")
     suspend fun handleSticker(update: ProcessedUpdate, bot: TelegramBot) {
         stickerService.handle(updateContextFactory.create(update, bot))
     }
 
-    @CommonHandler.Regex("^${CommandConstants.FACT}$")
+    @CommonHandler.Regex(".*${CommandConstants.FACT}.*")
     suspend fun handleFact(update: ProcessedUpdate, bot: TelegramBot) {
         factService.handle(updateContextFactory.create(update, bot))
     }
 
-    @CommonHandler.Regex("^${CommandConstants.TTS}$")
+    @CommonHandler.Regex(".*${CommandConstants.TTS}.*")
     suspend fun handleTts(update: ProcessedUpdate, bot: TelegramBot) {
         ttsService.handle(updateContextFactory.create(update, bot))
     }
 
-    @CommonHandler.Regex("^${CommandConstants.DAILY_MESSAGE}$")
+    @CommonHandler.Regex(".*${CommandConstants.DAILY_MESSAGE}.*")
     suspend fun handleDailyMessage(update: ProcessedUpdate, bot: TelegramBot) {
         dailyMessageService.handle(updateContextFactory.create(update, bot))
     }
 
-    @CommonHandler.Regex("^${CommandConstants.HELP}|${CommandConstants.START}$")
+    @CommonHandler.Regex(".*${CommandConstants.HELP}.*|.*${CommandConstants.START}.*")
     suspend fun handleHelp(user: User, bot: TelegramBot) {
-        sendMessage { printerUtil.printHelp() }.options { parseMode = ParseMode.Markdown }.send(user.id, bot)
+        sendMessage { printerUtil.printHelp() }
+            .options { parseMode = ParseMode.Markdown }
+            .send(user.id, bot)
     }
+
 }

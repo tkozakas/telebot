@@ -22,12 +22,17 @@ class TtsService(
 
     companion object {
         private const val NO_RESPONSE_MESSAGE = "TTS did not provide a response. Please try again."
+        private const val NO_MESSAGE_PROVIDED = "Please provide a message to convert to speech."
         private const val TEMP_FILE_PREFIX = "audio"
         private const val TEMP_FILE_EXTENSION = ".mp3"
     }
 
     override suspend fun handle(update: UpdateContext) {
         val messageText = update.args.drop(1).joinToString(" ")
+        if (messageText.isBlank()) {
+            sendMessage { NO_MESSAGE_PROVIDED }.send(update.telegramChatId, update.bot)
+            return
+        }
         val tempAudioFile = generateAudioFile(messageText)
 
         if (tempAudioFile == null) {

@@ -37,12 +37,11 @@ class UpdateMessageHandler(
     @UpdateHandler([UpdateType.MESSAGE])
     suspend fun handleUpdate(update: ProcessedUpdate, bot: TelegramBot) {
         try {
-            val context = updateContextFactory.create(update, bot)
             logger.info("Message received from chat: ${update.text}")
 
             if (Command.isCommand(update.text) || !shouldTriggerRandomResponse()) return
 
-            triggerRandomResponse(context)
+            // triggerRandomResponse(context) // TODO find a correct way to implement this
         } catch (e: IllegalStateException) {
             logger.error("Serialization failed for update ${update.updateId}: ${e.message}", e)
         } catch (e: Exception) {

@@ -45,11 +45,19 @@ class DailyMessageService(
                 .send(update.telegramChatId, update.bot)
             return
         }
-        val user = User(chat = update.chat, telegramUserId = update.telegramUserId, telegramUsername = update.telegramUsername)
+        val user =
+            User(chat = update.chat, telegramUserId = update.telegramUserId, telegramUsername = update.telegramUsername)
         val newStat = Stat(chat = update.chat, user = user, score = 0, year = CURRENT_YEAR)
         user.stats.add(newStat)
         userService.saveUser(user)
-        sendMessage { dailyMessageTemplate.userRegistered.format(formatUsername(update.telegramUsername, update.telegramUserId)) }
+        sendMessage {
+            dailyMessageTemplate.userRegistered.format(
+                formatUsername(
+                    update.telegramUsername,
+                    update.telegramUserId
+                )
+            )
+        }
             .options { parseMode = ParseMode.Markdown }
             .send(update.telegramChatId, update.bot)
     }
@@ -200,7 +208,10 @@ class DailyMessageService(
                 dailyMessageTemplate.yearEndMessage.format(
                     dailyMessageTemplate.alias,
                     CURRENT_YEAR,
-                    formatUsername(winnerOfTheYear.user.telegramUsername ?: "Unknown", winnerOfTheYear.user.telegramUserId),
+                    formatUsername(
+                        winnerOfTheYear.user.telegramUsername ?: "Unknown",
+                        winnerOfTheYear.user.telegramUserId
+                    ),
                     winnerOfTheYear.score
                 )
             }

@@ -18,4 +18,4 @@ open class Fact(
     @JoinColumn(name = "chat_id")
     open var chat: Chat? = null,
 
-)
+    )

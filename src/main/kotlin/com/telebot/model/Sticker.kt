@@ -25,4 +25,4 @@ open class Sticker(
     @JoinColumn(name = "chat_id")
     open var chat: Chat? = null,
 
-)
+    )

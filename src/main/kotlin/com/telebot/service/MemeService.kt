@@ -106,7 +106,10 @@ class MemeService(
 
         val mediaGroup = memes.mapNotNull { buildMediaGroupEntry(it, subreddit) }
         if (mediaGroup.isEmpty()) {
-            sendMessage { "No suitable photos to display from the fetched memes." }.send(update.telegramChatId, update.bot)
+            sendMessage { "No suitable photos to display from the fetched memes." }.send(
+                update.telegramChatId,
+                update.bot
+            )
         } else {
             sendMediaGroup(mediaGroup).send(update.telegramChatId, update.bot)
         }

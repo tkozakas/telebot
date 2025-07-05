@@ -6,11 +6,11 @@ on:
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-    
+      
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -28,12 +28,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build and push Docker image for multi-arch
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ghcr.io/tkozakas/telebot:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max

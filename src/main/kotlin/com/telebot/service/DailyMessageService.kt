@@ -12,6 +12,7 @@ import eu.vendeli.tgbot.api.message.sendMessage
 import eu.vendeli.tgbot.types.ParseMode
 import kotlinx.coroutines.delay
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.time.Year
 
 @Service
@@ -112,7 +113,7 @@ class DailyMessageService(
 
     private fun updateWinner(user: User) {
         user.stats.find { it.year == CURRENT_YEAR }?.let {
-            it.score = (it.score ?: 0) + 1
+            it.score = it.score + 1
             it.isWinner = true
         } ?: user.stats.add(
             Stat(
@@ -179,11 +180,13 @@ class DailyMessageService(
             .send(update.telegramChatId, update.bot)
     }
 
+    @Transactional(readOnly = true)
     fun getRandomGroupSentences(): List<Sentence> {
         val groupId = sentenceRepository.findRandomGroupId() ?: return emptyList()
         return sentenceRepository.findSentencesByGroupId(groupId)
     }
 
+    @Transactional
     fun resetWinners() {
         val chats = chatService.findAll()
         chats.forEach { chat ->
@@ -196,10 +199,12 @@ class DailyMessageService(
         return "[${username}](tg://user?id=${userId})"
     }
 
+    @Transactional
     suspend fun sendScheduledDailyMessage(userContext: UpdateContext) {
         chooseRandomWinner(userContext)
     }
 
+    @Transactional
     suspend fun sendYearEndMessage(update: UpdateContext) {
         val stats = aggregateStats(update.chat.stats.filter { CURRENT_YEAR == it.year })
         val winnerOfTheYear = stats.values.maxByOrNull { it.score }

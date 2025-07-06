@@ -5,6 +5,7 @@ import com.telebot.model.Chat
 import com.telebot.model.Fact
 import com.telebot.model.UpdateContext
 import com.telebot.repository.ChatRepository
+import com.telebot.repository.FactRepository
 import eu.vendeli.tgbot.api.media.sendAudio
 import eu.vendeli.tgbot.api.message.sendMessage
 import eu.vendeli.tgbot.types.ParseMode
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class FactService(
+    private val factRepository: FactRepository,
     private val chatRepository: ChatRepository,
     private val ttsService: TtsService
 ) : CommandService {
@@ -48,7 +50,7 @@ class FactService(
     }
 
     suspend fun provideRandomFact(update: UpdateContext) {
-        val randomFact = getRandomFact()
+        val randomFact = getRandomFact(update.chat.id)
         if (randomFact == null) {
             sendMessage { NO_FACTS }.send(update.telegramChatId, update.bot)
         } else {
@@ -56,12 +58,10 @@ class FactService(
         }
     }
 
-    private fun getRandomFact(): String? {
-        return chatRepository.findAll()
-            .flatMap { it.facts }
-            .shuffled()
-            .firstOrNull()
-            ?.comment
+    private fun getRandomFact(chatId: Long?): String? {
+        return factRepository.findRandomFactByChatId(chatId).let { fact ->
+            fact?.comment ?: NO_FACTS
+        }
     }
 
     private suspend fun respondWithFact(fact: String, update: UpdateContext) {

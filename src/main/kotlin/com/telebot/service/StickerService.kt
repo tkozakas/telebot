@@ -2,6 +2,7 @@ package com.telebot.service
 
 import com.telebot.enums.SubCommand
 import com.telebot.model.UpdateContext
+import com.telebot.repository.StickerRepository
 import com.telebot.util.PrinterUtil
 import eu.vendeli.tgbot.api.media.sticker
 import eu.vendeli.tgbot.api.message.sendMessage
@@ -13,7 +14,8 @@ import org.springframework.stereotype.Service
 @Service
 class StickerService(
     private val printerUtil: PrinterUtil,
-    private val chatService: ChatService
+    private val chatService: ChatService,
+    private val stickerRepository: StickerRepository
 ) : CommandService {
 
     companion object {
@@ -92,7 +94,7 @@ class StickerService(
     }
 
     suspend fun sendRandomSticker(update: UpdateContext) {
-        val sticker = update.chat.stickers.randomOrNull()
+        val sticker = stickerRepository.findRandomStickerByChatId(update.chat.id)
         if (sticker == null || sticker.fileId.isNullOrBlank()) {
             sendMessage { NO_STICKERS_FOUND }.send(update.telegramChatId, update.bot)
         } else {

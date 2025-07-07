@@ -18,5 +18,5 @@ interface FactRepository : JpaRepository<Fact, Long> {
       """,
         nativeQuery = true
     )
-    fun findRandomFactByChatId(chatId: Long?): Fact?
+    fun findRandomByChatId(chatId: Long?): Fact?
 }

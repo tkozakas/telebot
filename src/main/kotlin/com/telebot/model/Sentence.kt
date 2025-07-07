@@ -4,7 +4,7 @@ import jakarta.persistence.*
 
 @Entity
 @Table(name = "sentences")
-open class Sentence {
+open class Sentence(string: String) {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

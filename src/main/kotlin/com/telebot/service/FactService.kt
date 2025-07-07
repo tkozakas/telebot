@@ -1,22 +1,16 @@
 package com.telebot.service
 
 import com.telebot.enums.SubCommand
-import com.telebot.model.Chat
 import com.telebot.model.Fact
 import com.telebot.model.UpdateContext
-import com.telebot.repository.ChatRepository
 import com.telebot.repository.FactRepository
-import eu.vendeli.tgbot.api.media.sendAudio
-import eu.vendeli.tgbot.api.message.sendMessage
-import eu.vendeli.tgbot.types.ParseMode
-import eu.vendeli.tgbot.types.internal.ImplicitFile
+import com.telebot.util.TelegramMessageSender
 import org.springframework.stereotype.Service
 
 @Service
 class FactService(
     private val factRepository: FactRepository,
-    private val chatRepository: ChatRepository,
-    private val ttsService: TtsService
+    private val telegramMessageSender: TelegramMessageSender
 ) : CommandService {
 
     companion object {
@@ -26,55 +20,31 @@ class FactService(
     }
 
     override suspend fun handle(update: UpdateContext) {
-        val factText = update.args.drop(2).joinToString(" ")
-
         when (update.subCommand) {
-            SubCommand.ADD.name.lowercase() -> addFact(factText, update)
-            else -> provideRandomFact(update)
+            SubCommand.ADD.name.lowercase() -> handleAddFact(update)
+            else -> handleRandomFact(update)
         }
     }
 
-    private suspend fun addFact(factText: String, update: UpdateContext) {
-        if (factText.isBlank()) {
-            sendMessage { FACT_BLANK }.send(update.telegramChatId, update.bot)
+    private suspend fun handleAddFact(update: UpdateContext) {
+        val comment = update.args.drop(2).joinToString(" ").trim()
+        if (comment.isBlank()) {
+            sendMessage(update, FACT_BLANK)
             return
         }
-        saveFact(update.chat, factText)
-        sendMessage { FACT_ADDED }.send(update.telegramChatId, update.bot)
+        factRepository.save(Fact(chat = update.chat, comment = comment))
+        sendMessage(update, FACT_ADDED)
     }
 
-    private fun saveFact(chat: Chat, factText: String) {
-        val fact = Fact(comment = factText, chat = chat)
-        chat.facts.add(fact)
-        chatRepository.save(chat)
-    }
-
-    suspend fun provideRandomFact(update: UpdateContext) {
-        val randomFact = getRandomFact(update.chat.id)
-        if (randomFact == null) {
-            sendMessage { NO_FACTS }.send(update.telegramChatId, update.bot)
-        } else {
-            respondWithFact(randomFact, update)
+    private suspend fun handleRandomFact(update: UpdateContext) {
+        val fact = factRepository.findRandomByChatId(update.chat.chatId) ?: run {
+            sendMessage(update, NO_FACTS)
+            return
         }
+        sendMessage(update, fact.comment?: NO_FACTS)
     }
 
-    private fun getRandomFact(chatId: Long?): String? {
-        return factRepository.findRandomFactByChatId(chatId).let { fact ->
-            fact?.comment ?: NO_FACTS
-        }
-    }
-
-    private suspend fun respondWithFact(fact: String, update: UpdateContext) {
-        val audioFile = ttsService.generateAudioFile(fact)
-        if (audioFile != null) {
-            sendAudio(ImplicitFile.InpFile(audioFile))
-                .options { parseMode = ParseMode.Markdown }
-                .caption { fact }
-                .send(update.telegramChatId, update.bot)
-        } else {
-            sendMessage { fact }
-                .options { parseMode = ParseMode.Markdown }
-                .send(update.telegramChatId, update.bot)
-        }
+    private suspend fun sendMessage(update: UpdateContext, text: String) {
+        telegramMessageSender.send(update.bot, update.chat.chatId, text)
     }
 }

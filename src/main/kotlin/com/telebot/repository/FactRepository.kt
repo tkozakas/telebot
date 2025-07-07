@@ -8,8 +8,7 @@ import org.springframework.stereotype.Repository
 @Repository
 interface FactRepository : JpaRepository<Fact, Long> {
 
-    @Query(
-        value = """
+    @Query("""
         SELECT *
           FROM facts f
          WHERE f.chat_id = :chatId

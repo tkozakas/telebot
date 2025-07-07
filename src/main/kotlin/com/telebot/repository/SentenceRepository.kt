@@ -5,8 +5,12 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 
 interface SentenceRepository : JpaRepository<Sentence, Long> {
-    @Query("SELECT s.groupId FROM Sentence s ORDER BY RANDOM() LIMIT 1")
-    fun findRandomGroupId(): Long?
-
-    fun findSentencesByGroupId(randomGroupId: Long): List<Sentence>
+    @Query("""
+        SELECT * FROM sentences 
+        WHERE group_id = (SELECT group_id FROM sentences ORDER BY RANDOM() LIMIT 1)
+        ORDER BY order_number
+    """,
+        nativeQuery = true
+    )
+    fun findRandomGroup() : List<Sentence>
 }

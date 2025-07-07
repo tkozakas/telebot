@@ -32,13 +32,11 @@ class DailyMessageService(
     data class WinnerResult(val user: User, val score: Long, val isNew: Boolean)
 
     override suspend fun handle(update: UpdateContext) {
-        val year = update.args.getOrNull(2)?.toIntOrNull() ?: CURRENT_YEAR
-
         when (update.subCommand?.lowercase()) {
             null -> handleRandomWinnerSelection(update)
             SubCommand.ALL.name.lowercase() -> handleAllStatsCommand(update)
-            SubCommand.STATS.name.lowercase() -> handleYearStatsCommand(update, year)
-            else -> handleYearStatsCommand(update, year)
+            SubCommand.STATS.name.lowercase() -> handleYearStatsCommand(update)
+            else -> handleYearStatsCommand(update)
         }
     }
 
@@ -48,7 +46,13 @@ class DailyMessageService(
         displayStats(update, aggregatedStats, dailyMessageTemplate.statsHeaderAll)
     }
 
-    private suspend fun handleYearStatsCommand(update: UpdateContext, year: Int) {
+    private suspend fun handleYearStatsCommand(update: UpdateContext) {
+        val subCommand = update.args.getOrNull(2)
+        if (SubCommand.ALL.name.lowercase() == subCommand) {
+            handleAllStatsCommand(update)
+            return
+        }
+        val year = subCommand?.toIntOrNull() ?: CURRENT_YEAR
         val stats = statRepository.findByChatAndYear(update.chat, year)
         val aggregatedStats = aggregateStats(stats, update.chat)
         displayStats(update, aggregatedStats, dailyMessageTemplate.statsHeader.format(year))

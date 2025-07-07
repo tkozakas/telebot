@@ -16,6 +16,6 @@ open class Fact(
 
     @ManyToOne
     @JoinColumn(name = "chat_id")
-    open var chat: Chat? = null,
+    open var chat: Chat? = null
 
-    )
+)

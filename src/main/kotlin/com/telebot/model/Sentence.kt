@@ -9,7 +9,7 @@ open class Sentence {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "sentence_id", nullable = false)
-    open var id: Long? = null
+    open var sentenceId: Long? = null
 
     @Column(name = "group_id")
     open var groupId: Long? = null

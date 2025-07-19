@@ -40,20 +40,20 @@ class MemeService(
     @Transactional
     override suspend fun handle(update: UpdateContext) {
         when (update.subCommand?.lowercase()) {
-            SubCommand.LIST.name.lowercase() -> listSubreddits(update)
-            SubCommand.ADD.name.lowercase() -> addSubreddit(update)
-            SubCommand.REMOVE.name.lowercase() -> removeSubreddit(update)
-            else -> fetchAndSendMemes(update)
+            SubCommand.LIST.name.lowercase() -> handleListSubreddits(update)
+            SubCommand.ADD.name.lowercase() -> handleAddSubreddit(update)
+            SubCommand.REMOVE.name.lowercase() -> handleRemoveSubreddit(update)
+            else -> handleFetchAndSendMemes(update)
         }
     }
 
-    private suspend fun listSubreddits(update: UpdateContext) {
+    private suspend fun handleListSubreddits(update: UpdateContext) {
         val subreddits = subredditRepository.findByChat(update.chat)
         val message = if (subreddits.isEmpty()) EMPTY_SUBREDDIT_LIST else printerUtil.printSubreddits(subreddits)
         telegramMessageSender.send(update.bot, update.chat.chatId, message)
     }
 
-    suspend fun addSubreddit(update: UpdateContext) {
+    suspend fun handleAddSubreddit(update: UpdateContext) {
         val subredditName = update.args.getOrNull(2)?.removePrefix(REDDIT_URL)
         val subreddits = subredditRepository.findByChat(update.chat)
         if (subreddits.any { it.subredditName == subredditName }) {
@@ -72,7 +72,7 @@ class MemeService(
         }
     }
 
-    suspend fun removeSubreddit(update: UpdateContext) {
+    suspend fun handleRemoveSubreddit(update: UpdateContext) {
         val subredditName = update.args.getOrNull(2)?.removePrefix(REDDIT_URL)
 
         if (subredditName.isNullOrBlank()) {
@@ -92,7 +92,7 @@ class MemeService(
         }
     }
 
-    private suspend fun fetchAndSendMemes(update: UpdateContext) {
+    private suspend fun handleFetchAndSendMemes(update: UpdateContext) {
         val subredditName = update.args.getOrNull(2)?.removePrefix(REDDIT_URL)
 
         val subreddit =

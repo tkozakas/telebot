@@ -3,13 +3,15 @@ package com.telebot.service
 import com.telebot.client.GptClient
 import com.telebot.model.UpdateContext
 import com.telebot.properties.GptProperties
+import com.telebot.util.TelegramMessageSender
 import org.springframework.stereotype.Service
 
 @Service
 class GptService(
     private val gptClient: GptClient,
     private val gptMessageStorageService: GptMessageStorageService,
-    private val gptProperties: GptProperties
+    private val gptProperties: GptProperties,
+    private val telegramMessageSender: TelegramMessageSender,
 ) : CommandService {
 
     companion object {
@@ -22,10 +24,10 @@ class GptService(
     override suspend fun handle(update: UpdateContext) {
         val prompt = update.args.drop(1).joinToString(" ")
 
-//        when (update.subCommand?.lowercase()) {
-//            SubCommand.MEMORY.name.lowercase() -> sendChatHistory(update)
-//            SubCommand.FORGET.name.lowercase() -> clearChatHistory(update)
-//            else -> processChat(update, prompt)
-//        }
+        when (update.subCommand?.lowercase()) {
+            SubCommand.MEMORY.name.lowercase() -> sendChatHistory(update)
+            SubCommand.FORGET.name.lowercase() -> clearChatHistory(update)
+            else -> processChat(update, prompt)
+        }
     }
 }

@@ -10,54 +10,51 @@ sealed class Command(
 ) {
     @Component
     class CommandFactory(registry: CommandRegistry) {
-        val Help = Help(registry)
-        val Start = Start(registry)
-        val Gpt = Gpt(registry)
-        val Meme = Meme(registry)
-        val Sticker = Sticker(registry)
-        val Fact = Fact(registry)
-        val Tts = Tts(registry)
-        val DailyMessage = DailyMessage(registry)
+        val help = Help(registry)
+        val start = Start(registry)
+        val gpt = Gpt(registry)
+        val meme = Meme(registry)
+        val sticker = Sticker(registry)
+        val fact = Fact(registry)
+        val tts = Tts(registry)
+        val alias = Alias(registry)
 
-        fun values() = listOf(Help, Start, Gpt, Meme, Sticker, Fact, Tts, DailyMessage)
-        fun isCommand(text: String): Boolean {
-            return values().any { text.startsWith(it.command) }
-        }
+        fun values() = listOf(help, start, gpt, meme, sticker, fact, tts, alias)
     }
 
-    class Help(registry: CommandRegistry) : Command(registry.HELP, "Displays this help message", true)
-    class Start(registry: CommandRegistry) : Command(registry.START, "Starts the bot", true)
+    class Help(registry: CommandRegistry) : Command(registry.help, "Displays this help message", true)
+    class Start(registry: CommandRegistry) : Command(registry.start, "Starts the bot", true)
     class Gpt(registry: CommandRegistry) :
         Command(
-            registry.GPT,
+            registry.gpt,
             "Interact with the GPT model",
             subCommands = listOf(SubCommand.MEMORY, SubCommand.FORGET)
         )
 
     class Meme(registry: CommandRegistry) :
         Command(
-            registry.MEME,
+            registry.meme,
             "Manage memes",
             subCommands = listOf(SubCommand.LIST, SubCommand.ADD, SubCommand.REMOVE)
         )
 
     class Sticker(registry: CommandRegistry) :
         Command(
-            registry.STICKER,
+            registry.sticker,
             "Manage stickers",
             subCommands = listOf(SubCommand.LIST, SubCommand.ADD, SubCommand.REMOVE)
         )
 
     class Fact(registry: CommandRegistry) :
-        Command(registry.FACT, "Add or manage facts", subCommands = listOf(SubCommand.ADD))
+        Command(registry.fact, "Add or manage facts", subCommands = listOf(SubCommand.ADD))
 
     class Tts(registry: CommandRegistry) :
-        Command(registry.TTS, "Text-to-speech")
+        Command(registry.tts, "Text-to-speech")
 
-    class DailyMessage(registry: CommandRegistry) :
+    class Alias(registry: CommandRegistry) :
         Command(
-            registry.DAILY_MESSAGE,
-            "Daily message",
+            registry.alias,
+            "Roullete winner commands",
             subCommands = listOf(SubCommand.ALL, SubCommand.STATS)
         )
 }

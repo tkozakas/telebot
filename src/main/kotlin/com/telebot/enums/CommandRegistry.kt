@@ -5,12 +5,12 @@ import org.springframework.stereotype.Component
 
 @Component
 class CommandRegistry(props: CommandProperties) {
-    val GPT = props.gpt
-    val MEME = props.meme
-    val STICKER = props.sticker
-    val FACT = props.fact
-    val TTS = props.tts
-    val DAILY_MESSAGE = props.alias
-    val HELP = props.help
-    val START = props.start
+    val gpt = props.gpt
+    val meme = props.meme
+    val sticker = props.sticker
+    val fact = props.fact
+    val tts = props.tts
+    val alias = props.alias
+    val help = props.help
+    val start = props.start
 }

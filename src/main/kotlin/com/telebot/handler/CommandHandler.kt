@@ -30,13 +30,13 @@ class CommandHandler(
         val context = updateContextFactory.create(update, bot)
 
         when (command) {
-            commandRegistry.GPT -> gptService.handle(context)
-            commandRegistry.MEME -> memeService.handle(context)
-            commandRegistry.STICKER -> stickerService.handle(context)
-            commandRegistry.FACT -> factService.handle(context)
-            commandRegistry.TTS -> ttsService.handle(context)
-            commandRegistry.DAILY_MESSAGE -> dailyMessageService.handle(context)
-            commandRegistry.HELP, commandRegistry.START -> {
+            commandRegistry.gpt -> gptService.handle(context)
+            commandRegistry.meme -> memeService.handle(context)
+            commandRegistry.sticker -> stickerService.handle(context)
+            commandRegistry.fact -> factService.handle(context)
+            commandRegistry.tts -> ttsService.handle(context)
+            commandRegistry.alias -> dailyMessageService.handle(context)
+            commandRegistry.help, commandRegistry.start -> {
                 sendMessage { printerUtil.printHelp() }
                     .options { parseMode = ParseMode.Markdown }
                     .send(context.user.userId, bot)

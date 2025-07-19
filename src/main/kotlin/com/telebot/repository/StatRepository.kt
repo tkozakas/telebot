@@ -11,4 +11,5 @@ interface StatRepository : JpaRepository<Stat, Long> {
     fun findByChatAndYearAndIsWinnerTrue(chat: Chat, year: Int): Optional<Stat>
     fun findByChat(chat: Chat) : List<Stat>
     fun findByChatAndYear(chat: Chat, year: Int) : List<Stat>
+    fun findByIsWinnerTrue(): List<Stat>
 }

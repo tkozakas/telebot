@@ -12,6 +12,7 @@ import com.telebot.util.PrinterUtil
 import com.telebot.util.TelegramMessageSender
 import kotlinx.coroutines.delay
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.time.Year
 
 @Service
@@ -37,6 +38,15 @@ class DailyMessageService(
             SubCommand.ALL.name.lowercase() -> handleAllStatsCommand(update)
             SubCommand.STATS.name.lowercase() -> handleYearStatsCommand(update)
             else -> handleYearStatsCommand(update)
+        }
+    }
+
+    @Transactional
+    fun resetDailyWinner() {
+        val winners = statRepository.findByIsWinnerTrue()
+        if (winners.isNotEmpty()) {
+            winners.forEach { it.isWinner = false }
+            statRepository.saveAll(winners)
         }
     }
 

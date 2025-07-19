@@ -9,7 +9,16 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
-      - telebot-data:/var/lib/postgresql/data
+      - telebot-postgres-data:/var/lib/postgresql/data
+
+  telebot-redis-dev:
+    container_name: telebot-redis-dev
+    image: redis:alpine
+    ports:
+      - "6380:6379"
+    volumes:
+      - telebot-redis-data:/data
 
 volumes:
-  telebot-data:
+  telebot-postgres-data:
+  telebot-redis-data:

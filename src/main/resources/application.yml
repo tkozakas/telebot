@@ -8,6 +8,15 @@ spring:
       ddl-auto: validate
   config:
     import: "classpath:application-template.yaml"
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000 # 10 minutes
+  data:
+    redis:
+      host: # <<YOUR_REDIS_HOST>>
+      port: # <<YOUR_REDIS_PORT>>
+      password: # <<YOUR_REDIS_PASSWORD>>
 
 media:
   output-dir: "${TMP_DIR:tmp}"

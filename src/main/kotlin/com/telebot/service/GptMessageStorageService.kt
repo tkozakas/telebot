@@ -1,30 +1,34 @@
 package com.telebot.service
 
 import com.telebot.dto.GptRequestDTO
+import com.telebot.model.GptHistory
+import com.telebot.repository.GptHistoryRepository
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
-// TODO redis cache
 @Service
-class GptMessageStorageService {
+class GptMessageStorageService(
+    private val gptHistoryRepository: GptHistoryRepository
+) {
 
     @Value("\${gpt.initial-prompt}")
     private lateinit var initialPrompt: String
 
-    private val messageStore = mutableMapOf<Long, MutableList<GptRequestDTO.Message>>()
-
     fun addMessage(chatId: Long, message: GptRequestDTO.Message) {
-        val messages = messageStore.computeIfAbsent(chatId) { mutableListOf() }
-        if (messages.isEmpty() && initialPrompt.isNotBlank()) {
-            messages.add(GptRequestDTO.Message(role = "system", content = initialPrompt))
+        val history = gptHistoryRepository.findById(chatId).orElseGet { GptHistory(chatId) }
+
+        if (history.messages.isEmpty() && initialPrompt.isNotBlank()) {
+            history.messages.add(GptRequestDTO.Message(role = "system", content = initialPrompt))
         }
-        messages.add(message)
+        history.messages.add(message)
+        gptHistoryRepository.save(history)
     }
 
-    fun getMessages(chatId: Long): List<GptRequestDTO.Message> =
-        messageStore[chatId]?.toList() ?: emptyList()
+    fun getMessages(chatId: Long): List<GptRequestDTO.Message> {
+        return gptHistoryRepository.findById(chatId).map { it.messages }.orElse(null) ?: emptyList()
+    }
 
     fun clearMessages(chatId: Long) {
-        messageStore.remove(chatId)
+        gptHistoryRepository.deleteById(chatId)
     }
 }

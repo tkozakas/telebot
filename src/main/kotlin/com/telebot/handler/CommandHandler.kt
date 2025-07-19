@@ -25,7 +25,7 @@ class CommandHandler(
 
     @CommonHandler.Regex(".*${CommandConstants.GPT}.*")
     suspend fun handleGpt(update: ProcessedUpdate, bot: TelegramBot) {
-        //gptService.handle(updateContextFactory.create(update, bot))
+        gptService.handle(updateContextFactory.create(update, bot))
     }
 
     @CommonHandler.Regex(".*${CommandConstants.MEME}.*")

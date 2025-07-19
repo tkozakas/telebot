@@ -8,6 +8,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: "postgres"
       SPRING_DATA_REDIS_HOST: "telebot-redis"
       SPRING_DATA_REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_PASSWORD: "<<redis_password>>"
       BOT_USERNAME: "<<bot_username>>"
       BOT_TOKEN: "<<bot_token>>"
     volumes:

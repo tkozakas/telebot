@@ -16,6 +16,7 @@ services:
     image: redis:alpine
     ports:
       - "6380:6379"
+    command: redis-server --requirepass devpassword
     volumes:
       - telebot-redis-data:/data
 

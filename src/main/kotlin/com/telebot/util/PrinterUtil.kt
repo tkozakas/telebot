@@ -66,7 +66,7 @@ class PrinterUtil(
     }
 
 
-    fun printSubreddits(subreddits: MutableSet<Subreddit>): String {
+    fun printSubreddits(subreddits: List<Subreddit>): String {
         return """
                 |*Subreddits:*
                 |

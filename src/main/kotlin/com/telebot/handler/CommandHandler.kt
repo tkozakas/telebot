@@ -9,6 +9,7 @@ import eu.vendeli.tgbot.api.message.sendMessage
 import eu.vendeli.tgbot.types.ParseMode
 import eu.vendeli.tgbot.types.internal.ProcessedUpdate
 import eu.vendeli.tgbot.types.internal.UpdateType
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
@@ -21,13 +22,20 @@ class CommandHandler(
     private val printerUtil: PrinterUtil,
     private val updateContextFactory: UpdateContextFactory,
     private val gptService: GptService,
-    private val commandRegistry: CommandRegistry
+    private val commandRegistry: CommandRegistry,
+    @Value("\${ktgram.username}") private val botUsername: String
 ) {
     @UpdateHandler([UpdateType.MESSAGE])
     suspend fun handle(update: ProcessedUpdate, bot: TelegramBot) {
         val text = update.text
-        val command = text.split(" ").first()
-        val context = updateContextFactory.create(update, bot)
+        var command = text.split(" ").first()
+        if (command.contains("@")) {
+            val commandParts = command.split("@")
+            if (commandParts.getOrNull(1) == botUsername) {
+                command = commandParts[0]
+            }
+        }
+        val context by lazy { updateContextFactory.create(update, bot) }
 
         when (command) {
             commandRegistry.gpt -> gptService.handle(context)

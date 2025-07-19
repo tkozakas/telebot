@@ -7,11 +7,9 @@ import com.telebot.model.UpdateContext
 import com.telebot.properties.GptProperties
 import com.telebot.util.TelegramMediaSender
 import com.telebot.util.TelegramMessageSender
-import eu.vendeli.tgbot.types.internal.InputFile
+import eu.vendeli.tgbot.utils.toInputFile
 import org.springframework.stereotype.Service
-import kotlin.io.path.createTempFile
-import kotlin.io.path.readBytes
-import kotlin.io.path.writeText
+import java.io.File
 
 @Service
 class GptService(
@@ -43,16 +41,16 @@ class GptService(
             telegramMessageSender.send(update.bot, update.chat.chatId, CHAT_HISTORY_EMPTY)
             return
         }
-        val historyFile = gptMessageStorageService.getMessages(update.chat.chatId).takeIf { it.isNotEmpty() }?.let {
-            InputFile(createTempFile(prefix = "chat_history_", suffix = ".txt").apply {
-                writeText(it.joinToString("\n") { msg -> "${msg.role}: ${msg.content}" })
-            }.readBytes())
-        } ?: return
+        val file = File("chat_history.txt").apply {
+            val content = messages.joinToString("\n") { message -> "${message.role}: ${message.content}" }
+            writeText(content)
+        }.toInputFile()
+
         telegramMediaSender.sendDocument(
             update.bot,
             update.chat.chatId,
             "Chat History",
-            historyFile
+            file
         )
     }
 
@@ -62,7 +60,7 @@ class GptService(
     }
 
     private suspend fun handlePrompt(update: UpdateContext) {
-        val prompt = update.args.drop(1).joinToString(" ")
+        val prompt = update.user.username + ": " + update.args.drop(1).joinToString(" ")
 
         if (prompt.isBlank()) {
             telegramMessageSender.send(update.bot, update.chat.chatId, INVALID_PROMPT)

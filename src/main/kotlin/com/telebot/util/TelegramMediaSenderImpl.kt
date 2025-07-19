@@ -7,7 +7,6 @@ import eu.vendeli.tgbot.api.media.sendMediaGroup
 import eu.vendeli.tgbot.api.media.sendPhoto
 import eu.vendeli.tgbot.types.internal.ImplicitFile
 import eu.vendeli.tgbot.types.internal.InputFile
-import eu.vendeli.tgbot.types.media.File
 import eu.vendeli.tgbot.types.media.InputMedia
 import org.springframework.stereotype.Component
 
@@ -32,8 +31,8 @@ class TelegramMediaSenderImpl : TelegramMediaSender {
         }
     }
 
-    override suspend fun sendDocument(bot: TelegramBot, chatId: Long, caption: String, file: InputFile) {
-        sendDocument(ImplicitFile.InpFile(file))
+    override suspend fun sendDocument(bot: TelegramBot, chatId: Long, caption: String, inputFile: InputFile) {
+        sendDocument(ImplicitFile.InpFile(inputFile))
             .caption { caption }
             .send(chatId, bot)
     }

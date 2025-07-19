@@ -33,6 +33,9 @@ class CommandHandler(
         try {
             val text = update.text
             var command = text.split(" ").first()
+            if (!command.startsWith("/")) {
+                return
+            }
             if (command.contains("@")) {
                 val commandParts = command.split("@")
                 if (commandParts.getOrNull(1) == botUsername) {

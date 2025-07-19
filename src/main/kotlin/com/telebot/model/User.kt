@@ -1,27 +1,20 @@
 package com.telebot.model
 
-import jakarta.persistence.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.Table
 
 @Entity
 @Table(name = "users")
 open class User(
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "user_id", nullable = false)
-    open var id: Long? = null,
-
-    @Column(name = "telegram_user_id", nullable = false)
-    open var telegramUserId: Long,
+    open var userId: Long,
 
     @Column(name = "username")
-    open var telegramUsername: String? = null,
+    open var username: String? = null
 
-    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], fetch = FetchType.EAGER, orphanRemoval = true)
-    open val stats: MutableList<Stat> = mutableListOf(),
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "chat_id", nullable = false)
-    open var chat: Chat
 )
 

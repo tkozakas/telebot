@@ -4,20 +4,19 @@ import jakarta.persistence.*
 
 @Entity
 @Table(name = "sentences")
-open class Sentence {
+open class Sentence(
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "sentence_id", nullable = false)
-    open var id: Long? = null
+    open var sentenceId: Long? = null,
 
     @Column(name = "group_id")
-    open var groupId: Long? = null
+    open var groupId: Long? = null,
 
     @Column(name = "order_number", nullable = false)
-    open var orderNumber: Int? = null
+    open var orderNumber: Int? = null,
 
     @Column(name = "text", length = 1000)
-    open var text: String? = null
-
-}
+    open var text: String? = null,
+)

@@ -8,8 +8,7 @@ import org.springframework.stereotype.Repository
 @Repository
 interface FactRepository : JpaRepository<Fact, Long> {
 
-    @Query(
-        value = """
+    @Query("""
         SELECT *
           FROM facts f
          WHERE f.chat_id = :chatId
@@ -19,5 +18,5 @@ interface FactRepository : JpaRepository<Fact, Long> {
       """,
         nativeQuery = true
     )
-    fun findRandomFactByChatId(chatId: Long?): Fact?
+    fun findRandomByChatId(chatId: Long?): Fact?
 }

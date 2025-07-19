@@ -13,14 +13,14 @@ import org.springframework.stereotype.Component
 
 @Component
 class CommandHandler(
-    private val factService: FactService,
     private val memeService: MemeService,
-    private val gptService: GptService,
-    private val dailyMessageService: DailyMessageService,
-    private val ttsService: TtsService,
     private val stickerService: StickerService,
+    private val factService: FactService,
+    private val ttsService: TtsService,
+    private val dailyMessageService: DailyMessageService,
     private val printerUtil: PrinterUtil,
-    private val updateContextFactory: UpdateContextFactory
+    private val updateContextFactory: UpdateContextFactory,
+    private val gptService: GptService
 ) {
 
     @CommonHandler.Regex(".*${CommandConstants.GPT}.*")
@@ -35,7 +35,7 @@ class CommandHandler(
 
     @CommonHandler.Regex(".*${CommandConstants.STICKER}.*")
     suspend fun handleSticker(update: ProcessedUpdate, bot: TelegramBot) {
-        stickerService.handle(updateContextFactory.create(update, bot))
+        //stickerService.handle(updateContextFactory.create(update, bot))
     }
 
     @CommonHandler.Regex(".*${CommandConstants.FACT}.*")
@@ -45,7 +45,7 @@ class CommandHandler(
 
     @CommonHandler.Regex(".*${CommandConstants.TTS}.*")
     suspend fun handleTts(update: ProcessedUpdate, bot: TelegramBot) {
-        ttsService.handle(updateContextFactory.create(update, bot))
+        //ttsService.handle(updateContextFactory.create(update, bot))
     }
 
     @CommonHandler.Regex(".*${CommandConstants.DAILY_MESSAGE}.*")

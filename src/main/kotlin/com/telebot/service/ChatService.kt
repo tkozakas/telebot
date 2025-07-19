@@ -4,6 +4,7 @@ import com.telebot.model.Chat
 import com.telebot.repository.ChatRepository
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class ChatService(
@@ -11,20 +12,12 @@ class ChatService(
     @Value("\${ktgram.username}") private val botUsername: String
 ) {
 
-    fun saveChat(chatId: Long, chatName: String?): Chat {
-        val chat = chatRepository.findByTelegramChatId(chatId) ?: Chat(telegramChatId = chatId)
-        chat.telegramChatName = chatName?.takeIf(String::isNotBlank) ?: botUsername
-        return chatRepository.save(chat)
-    }
-
-    fun save(chat: Chat) = chatRepository.save(chat)
-
-    fun findAll(): List<Chat> = chatRepository.findAll()
-
-    fun saveAll(chats: List<Chat>): List<Chat> = chatRepository.saveAll(chats)
-
+    @Transactional
     fun findOrCreate(chatId: Long, chatName: String?): Chat {
-        return chatRepository.findByTelegramChatId(chatId) ?: saveChat(chatId, chatName)
+        return chatRepository.findById(chatId).orElseGet {
+            val newChat = Chat(chatId, chatName ?: botUsername)
+            chatRepository.save(newChat)
+        }
     }
 
 }

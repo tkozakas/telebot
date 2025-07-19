@@ -10,7 +10,7 @@ open class Subreddit(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "subreddit_id", nullable = false)
-    open var id: UUID? = null,
+    open var subredditId: UUID? = null,
 
     @Column(name = "subreddit_name", nullable = false)
     open var subredditName: String? = null,

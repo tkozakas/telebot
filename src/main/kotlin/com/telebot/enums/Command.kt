@@ -46,6 +46,6 @@ sealed class Command(
         Command(
             CommandConstants.DAILY_MESSAGE,
             "Daily message",
-            subCommands = listOf(SubCommand.REGISTER, SubCommand.ALL, SubCommand.STATS)
+            subCommands = listOf(SubCommand.ALL, SubCommand.STATS)
         )
 }

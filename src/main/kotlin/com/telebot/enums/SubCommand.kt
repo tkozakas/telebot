@@ -8,7 +8,6 @@ enum class SubCommand {
     LIST,
     ALL,
     STATS,
-    REGISTER,
     FORGET
 }
 

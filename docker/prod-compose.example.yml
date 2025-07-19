@@ -1,17 +1,22 @@
 services:
   telegram-bot:
     container_name: telebot
-    # build image locally first
     image: tkozakas/telebot:latest
     environment:
       SPRING_DATASOURCE_URL: "jdbc:postgresql://telebot-postgres:5432/telebot"
       SPRING_DATASOURCE_USERNAME: "postgres"
       SPRING_DATASOURCE_PASSWORD: "postgres"
+      SPRING_DATA_REDIS_HOST: "telebot-redis"
+      SPRING_DATA_REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_PASSWORD: "<<redis_password>>"
       BOT_USERNAME: "<<bot_username>>"
       BOT_TOKEN: "<<bot_token>>"
     volumes:
       - ./data:/app/data
     restart: always
+    depends_on:
+      - telebot-postgres
+      - telebot-redis
 
   telebot-postgres:
     container_name: telebot-postgres
@@ -22,4 +27,11 @@ services:
       POSTGRES_DB: telebot
     volumes:
       - ./postgres:/var/lib/postgresql/data
+    restart: always
+
+  telebot-redis:
+    container_name: telebot-redis
+    image: redis:alpine
+    volumes:
+      - ./redis:/data
     restart: always

@@ -6,8 +6,7 @@ import org.springframework.data.jpa.repository.Query
 
 interface StickerRepository : JpaRepository<Sticker, Long> {
 
-    @Query(
-        value = """
+    @Query("""
         SELECT *
           FROM stickers s
          WHERE s.chat_id = :chatId

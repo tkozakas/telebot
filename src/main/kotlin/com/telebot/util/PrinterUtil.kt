@@ -14,19 +14,17 @@ class PrinterUtil(
 
     fun printStats(
         header: String,
-        stats: Map<Long, Stat>,
-        year: String,
+        stats: List<Stat>,
         footer: String? = null,
         bodyTemplate: String
     ): String {
-        val body = stats.entries
-            .sortedByDescending { it.value.score ?: 0L }
+        val body = stats
+            .sortedByDescending { it.score }
             .withIndex()
-            .joinToString("\n") { (index, entry) ->
-                val (_, stat) = entry
+            .joinToString("\n") { (index, stat) ->
                 bodyTemplate.format(
                     index + 1,
-                    (if (stat.isWinner == true) "👑 " else "") + stat.user.telegramUsername,
+                    (if (stat.isWinner == true) "👑 " else "") + stat.user.username,
                     stat.score
                 )
             }
@@ -68,7 +66,7 @@ class PrinterUtil(
     }
 
 
-    fun printSubreddits(subreddits: MutableSet<Subreddit>): String {
+    fun printSubreddits(subreddits: List<Subreddit>): String {
         return """
                 |*Subreddits:*
                 |

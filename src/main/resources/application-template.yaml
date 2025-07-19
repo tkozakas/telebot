@@ -1,3 +1,13 @@
+command:
+  alias: /pi
+  tts: /tts
+  gpt: /gpt
+  meme: /meme
+  sticker: /sticker
+  fact: /fact
+  help: /help
+  start: /start
+
 daily-message:
   alias: "winner"
   no_stats: "No stats available."
@@ -6,7 +16,7 @@ daily-message:
   stats_footer: "Total users: %d"
   user_stats: "%s - %s %d points"
   user_stats_no_score: "No score available for %s"
-  winner_exists: "Winner of the day is %s with %d points."
+  winner_exists: "%s of the day is %s with %d points."
   user_already_registered: "You already been registered."
   user_registered: "%s has been registered."
   year_end_message: "The %s of %s year is %s with %d points."

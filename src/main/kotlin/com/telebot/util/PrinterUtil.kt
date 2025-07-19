@@ -9,7 +9,8 @@ import org.springframework.stereotype.Component
 
 @Component
 class PrinterUtil(
-    @Value("\${daily-message.alias}") private val alias: String
+    @Value("\${daily-message.alias}") private val alias: String,
+    private val commandFactory: Command.CommandFactory
 ) {
 
     fun printStats(
@@ -39,7 +40,7 @@ class PrinterUtil(
             |*Available Commands:*
             |
             |${
-            Command.values().filterNot { command -> command.listExcluded }.joinToString("\n") {
+            commandFactory.values().filterNot { command -> command.listExcluded }.joinToString("\n") {
                 "- `${it.command.format(alias)}` — ${it.description} `<${
                     it.subCommands.joinToString(", ").lowercase()
                 }>`"

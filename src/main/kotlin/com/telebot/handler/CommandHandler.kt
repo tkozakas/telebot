@@ -1,14 +1,14 @@
 package com.telebot.handler
 
-import com.telebot.enums.CommandConstants
+import com.telebot.enums.CommandRegistry
 import com.telebot.service.*
 import com.telebot.util.PrinterUtil
 import eu.vendeli.tgbot.TelegramBot
-import eu.vendeli.tgbot.annotations.CommonHandler
+import eu.vendeli.tgbot.annotations.UpdateHandler
 import eu.vendeli.tgbot.api.message.sendMessage
 import eu.vendeli.tgbot.types.ParseMode
-import eu.vendeli.tgbot.types.User
 import eu.vendeli.tgbot.types.internal.ProcessedUpdate
+import eu.vendeli.tgbot.types.internal.UpdateType
 import org.springframework.stereotype.Component
 
 @Component
@@ -20,44 +20,27 @@ class CommandHandler(
     private val dailyMessageService: DailyMessageService,
     private val printerUtil: PrinterUtil,
     private val updateContextFactory: UpdateContextFactory,
-    private val gptService: GptService
+    private val gptService: GptService,
+    private val commandRegistry: CommandRegistry
 ) {
+    @UpdateHandler([UpdateType.MESSAGE])
+    suspend fun handle(update: ProcessedUpdate, bot: TelegramBot) {
+        val text = update.text
+        val command = text.split(" ").first()
+        val context = updateContextFactory.create(update, bot)
 
-    @CommonHandler.Regex(".*${CommandConstants.GPT}.*")
-    suspend fun handleGpt(update: ProcessedUpdate, bot: TelegramBot) {
-        gptService.handle(updateContextFactory.create(update, bot))
+        when (command) {
+            commandRegistry.GPT -> gptService.handle(context)
+            commandRegistry.MEME -> memeService.handle(context)
+            commandRegistry.STICKER -> stickerService.handle(context)
+            commandRegistry.FACT -> factService.handle(context)
+            commandRegistry.TTS -> ttsService.handle(context)
+            commandRegistry.DAILY_MESSAGE -> dailyMessageService.handle(context)
+            commandRegistry.HELP, commandRegistry.START -> {
+                sendMessage { printerUtil.printHelp() }
+                    .options { parseMode = ParseMode.Markdown }
+                    .send(context.user.userId, bot)
+            }
+        }
     }
-
-    @CommonHandler.Regex(".*${CommandConstants.MEME}.*")
-    suspend fun handleMeme(update: ProcessedUpdate, bot: TelegramBot) {
-        memeService.handle(updateContextFactory.create(update, bot))
-    }
-
-    @CommonHandler.Regex(".*${CommandConstants.STICKER}.*")
-    suspend fun handleSticker(update: ProcessedUpdate, bot: TelegramBot) {
-        //stickerService.handle(updateContextFactory.create(update, bot))
-    }
-
-    @CommonHandler.Regex(".*${CommandConstants.FACT}.*")
-    suspend fun handleFact(update: ProcessedUpdate, bot: TelegramBot) {
-        factService.handle(updateContextFactory.create(update, bot))
-    }
-
-    @CommonHandler.Regex(".*${CommandConstants.TTS}.*")
-    suspend fun handleTts(update: ProcessedUpdate, bot: TelegramBot) {
-        //ttsService.handle(updateContextFactory.create(update, bot))
-    }
-
-    @CommonHandler.Regex(".*${CommandConstants.DAILY_MESSAGE}.*")
-    suspend fun handleDailyMessage(update: ProcessedUpdate, bot: TelegramBot) {
-        dailyMessageService.handle(updateContextFactory.create(update, bot))
-    }
-
-    @CommonHandler.Regex(".*${CommandConstants.HELP}.*|.*${CommandConstants.START}.*")
-    suspend fun handleHelp(user: User, bot: TelegramBot) {
-        sendMessage { printerUtil.printHelp() }
-            .options { parseMode = ParseMode.Markdown }
-            .send(user.id, bot)
-    }
-
 }

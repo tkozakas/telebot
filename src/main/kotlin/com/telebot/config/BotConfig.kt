@@ -13,7 +13,8 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class BotConfig(
-    @Value("\${ktgram.bot[0].token}") private val token: String
+    @Value("\${ktgram.bot[0].token}") private val token: String,
+    private val commandFactory: Command.CommandFactory
 ) : BotConfiguration() {
 
     @Bean
@@ -34,7 +35,7 @@ class BotConfig(
             restrictSpacesInCommands = true
         }
         setMyCommands {
-            Command.values().forEach { command ->
+            commandFactory.values().forEach { command ->
                 if (command.listExcluded) return@forEach
                 botCommand(command.command, command.description)
             }

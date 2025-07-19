@@ -1,50 +1,62 @@
 package com.telebot.enums
 
+import org.springframework.stereotype.Component
+
 sealed class Command(
     val command: String,
     val description: String,
     val listExcluded: Boolean = false,
     val subCommands: List<SubCommand> = emptyList()
 ) {
-    companion object {
+    @Component
+    class CommandFactory(registry: CommandRegistry) {
+        val Help = Help(registry)
+        val Start = Start(registry)
+        val Gpt = Gpt(registry)
+        val Meme = Meme(registry)
+        val Sticker = Sticker(registry)
+        val Fact = Fact(registry)
+        val Tts = Tts(registry)
+        val DailyMessage = DailyMessage(registry)
+
         fun values() = listOf(Help, Start, Gpt, Meme, Sticker, Fact, Tts, DailyMessage)
         fun isCommand(text: String): Boolean {
             return values().any { text.startsWith(it.command) }
         }
     }
 
-    data object Help : Command(CommandConstants.HELP, "Displays this help message", true)
-    data object Start : Command(CommandConstants.START, "Starts the bot", true)
-    data object Gpt :
+    class Help(registry: CommandRegistry) : Command(registry.HELP, "Displays this help message", true)
+    class Start(registry: CommandRegistry) : Command(registry.START, "Starts the bot", true)
+    class Gpt(registry: CommandRegistry) :
         Command(
-            CommandConstants.GPT,
+            registry.GPT,
             "Interact with the GPT model",
             subCommands = listOf(SubCommand.MEMORY, SubCommand.FORGET)
         )
 
-    data object Meme :
+    class Meme(registry: CommandRegistry) :
         Command(
-            CommandConstants.MEME,
+            registry.MEME,
             "Manage memes",
             subCommands = listOf(SubCommand.LIST, SubCommand.ADD, SubCommand.REMOVE)
         )
 
-    data object Sticker :
+    class Sticker(registry: CommandRegistry) :
         Command(
-            CommandConstants.STICKER,
+            registry.STICKER,
             "Manage stickers",
             subCommands = listOf(SubCommand.LIST, SubCommand.ADD, SubCommand.REMOVE)
         )
 
-    data object Fact :
-        Command(CommandConstants.FACT, "Add or manage facts", subCommands = listOf(SubCommand.ADD))
+    class Fact(registry: CommandRegistry) :
+        Command(registry.FACT, "Add or manage facts", subCommands = listOf(SubCommand.ADD))
 
-    data object Tts :
-        Command(CommandConstants.TTS, "Text-to-speech")
+    class Tts(registry: CommandRegistry) :
+        Command(registry.TTS, "Text-to-speech")
 
-    data object DailyMessage :
+    class DailyMessage(registry: CommandRegistry) :
         Command(
-            CommandConstants.DAILY_MESSAGE,
+            registry.DAILY_MESSAGE,
             "Daily message",
             subCommands = listOf(SubCommand.ALL, SubCommand.STATS)
         )

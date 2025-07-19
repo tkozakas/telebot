@@ -129,7 +129,7 @@ class DailyMessageService(
     }
 
     private suspend fun displayExistingWinner(update: UpdateContext, winner: WinnerResult) {
-        val message = dailyMessageTemplate.winnerExists.format(displayUser(winner.user), winner.score)
+        val message = dailyMessageTemplate.winnerExists.format(dailyMessageTemplate.alias, displayUser(winner.user), winner.score)
         sendMarkdownMessage(update, message)
     }
 

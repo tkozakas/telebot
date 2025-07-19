@@ -25,7 +25,7 @@ class CommandHandler(
 
     @CommonHandler.Regex(".*${CommandConstants.GPT}.*")
     suspend fun handleGpt(update: ProcessedUpdate, bot: TelegramBot) {
-        gptService.handle(updateContextFactory.create(update, bot))
+        //gptService.handle(updateContextFactory.create(update, bot))
     }
 
     @CommonHandler.Regex(".*${CommandConstants.MEME}.*")
@@ -35,7 +35,7 @@ class CommandHandler(
 
     @CommonHandler.Regex(".*${CommandConstants.STICKER}.*")
     suspend fun handleSticker(update: ProcessedUpdate, bot: TelegramBot) {
-        stickerService.handle(updateContextFactory.create(update, bot))
+        //stickerService.handle(updateContextFactory.create(update, bot))
     }
 
     @CommonHandler.Regex(".*${CommandConstants.FACT}.*")
@@ -45,7 +45,7 @@ class CommandHandler(
 
     @CommonHandler.Regex(".*${CommandConstants.TTS}.*")
     suspend fun handleTts(update: ProcessedUpdate, bot: TelegramBot) {
-        ttsService.handle(updateContextFactory.create(update, bot))
+        //ttsService.handle(updateContextFactory.create(update, bot))
     }
 
     @CommonHandler.Regex(".*${CommandConstants.DAILY_MESSAGE}.*")

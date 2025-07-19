@@ -12,9 +12,6 @@ open class Sticker(
     @Column(name = "sticker_id", nullable = false)
     open var stickerId: UUID? = null,
 
-    @Column(name = "file_id")
-    open var fileId: String? = null,
-
     @Column(name = "sticker_set_name")
     open var stickerSetName: String? = null,
 

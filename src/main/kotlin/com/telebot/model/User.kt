@@ -1,6 +1,9 @@
 package com.telebot.model
 
-import jakarta.persistence.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.Table
 
 @Entity
 @Table(name = "users")
@@ -11,9 +14,7 @@ open class User(
     open var userId: Long,
 
     @Column(name = "username")
-    open var username: String? = null,
+    open var username: String? = null
 
-    @ManyToMany(mappedBy = "users")
-    open var chats: MutableSet<Chat> = mutableSetOf()
 )
 

@@ -54,7 +54,7 @@ class CommandHandler(
                 commandRegistry.help, commandRegistry.start -> {
                     sendMessage { printerUtil.printHelp() }
                         .options { parseMode = ParseMode.Markdown }
-                        .send(context.user.userId, bot)
+                        .send(context.chat.chatId, bot)
                 }
             }
         } catch (e: IllegalStateException) {

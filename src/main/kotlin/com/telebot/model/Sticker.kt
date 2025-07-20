@@ -15,6 +15,9 @@ open class Sticker(
     @Column(name = "sticker_set_name")
     open var stickerSetName: String? = null,
 
+    @Column(name = "file_id", nullable = false)
+    open var fileId: String? = null,
+
     @ManyToOne
     @JoinColumn(name = "chat_id")
     open var chat: Chat? = null

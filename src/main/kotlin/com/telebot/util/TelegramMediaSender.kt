@@ -9,4 +9,5 @@ interface TelegramMediaSender {
     suspend fun sendAnimation(bot: TelegramBot, chatId: Long, fileUrl: String, caption: String)
     suspend fun sendMediaGroup(bot: TelegramBot, chatId: Long, mediaGroup: List<InputMedia>)
     suspend fun sendDocument(bot: TelegramBot, chatId: Long, caption: String, file: InputFile)
+    suspend fun sendSticker(bot: TelegramBot, chatId: Long, fileUrl: String)
 }
